@@ -196,6 +196,45 @@ class FeedEntry {
   );
 }
 
+class WaterQualityEntry {
+  final String id;
+  final String tankId;
+  final DateTime date;
+  final double? ph;
+  final double? ammonia;
+  final double? nitrite;
+  final double? salinity;
+  final double? temperature;
+  final double? dissolvedOxygen;
+  final String? notes;
+
+  WaterQualityEntry({
+    required this.id,
+    required this.tankId,
+    required this.date,
+    this.ph,
+    this.ammonia,
+    this.nitrite,
+    this.salinity,
+    this.temperature,
+    this.dissolvedOxygen,
+    this.notes,
+  });
+
+  factory WaterQualityEntry.fromJson(Map<String, dynamic> json) => WaterQualityEntry(
+    id: json['id'],
+    tankId: json['tank_id'],
+    date: DateTime.parse(json['date']),
+    ph: json['ph']?.toDouble(),
+    ammonia: json['ammonia']?.toDouble(),
+    nitrite: json['nitrite']?.toDouble(),
+    salinity: json['salinity']?.toDouble(),
+    temperature: json['temperature']?.toDouble(),
+    dissolvedOxygen: json['dissolved_oxygen']?.toDouble(),
+    notes: json['notes'],
+  );
+}
+
 class HarvestEntry {
   final String id;
   final String tankId;
@@ -372,6 +411,31 @@ class FarmProvider extends ChangeNotifier {
     _currentFarm = farm;
     notifyListeners();
   }
+
+  Future<void> updateFarm(Farm farm) async {
+    final response = await Supabase.instance.client
+        .from('farms')
+        .update({
+          'name': farm.name,
+          'location': farm.location,
+          'contact': farm.contact,
+          'phone': farm.phone,
+        })
+        .eq('id', farm.id)
+        .select()
+        .single();
+    final index = _farms.indexWhere((f) => f.id == farm.id);
+    if (index != -1) {
+      _farms[index] = Farm.fromJson(response);
+    }
+    notifyListeners();
+  }
+
+  Future<void> deleteFarm(String farmId) async {
+    await Supabase.instance.client.from('farms').delete().eq('id', farmId);
+    _farms.removeWhere((f) => f.id == farmId);
+    notifyListeners();
+  }
 }
 
 class TankProvider extends ChangeNotifier {
@@ -523,6 +587,41 @@ class FeedProvider extends ChangeNotifier {
         .delete()
         .eq('id', entryId);
     _entries.removeWhere((e) => e.id == entryId);
+    notifyListeners();
+  }
+}
+
+class WaterQualityProvider extends ChangeNotifier {
+  List<WaterQualityEntry> _entries = [];
+  List<WaterQualityEntry> get entries => _entries;
+
+  Future<void> loadEntries(String tankId) async {
+    final response = await Supabase.instance.client
+        .from('water_quality_entries')
+        .select()
+        .eq('tank_id', tankId)
+        .order('date', ascending: false);
+    _entries = (response as List).map((e) => WaterQualityEntry.fromJson(e)).toList();
+    notifyListeners();
+  }
+
+  Future<void> addEntry(WaterQualityEntry entry) async {
+    final response = await Supabase.instance.client
+        .from('water_quality_entries')
+        .insert({
+          'tank_id': entry.tankId,
+          'date': AppDateUtils.getFormattedDate(entry.date),
+          'ph': entry.ph,
+          'ammonia': entry.ammonia,
+          'nitrite': entry.nitrite,
+          'salinity': entry.salinity,
+          'temperature': entry.temperature,
+          'dissolved_oxygen': entry.dissolvedOxygen,
+          'notes': entry.notes,
+        })
+        .select()
+        .single();
+    _entries.insert(0, WaterQualityEntry.fromJson(response));
     notifyListeners();
   }
 }
@@ -1094,6 +1193,81 @@ class FeedEntryCard extends StatelessWidget {
   }
 }
 
+class WaterQualityEntryCard extends StatelessWidget {
+  final WaterQualityEntry entry;
+
+  const WaterQualityEntryCard({super.key, required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppDateUtils.getDisplayDate(entry.date),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.gray700,
+            ),
+          ),
+          const Divider(height: 24),
+          GridView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 2.5,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            children: [
+              _buildParam('pH', entry.ph?.toStringAsFixed(1) ?? '-', Icons.science),
+              _buildParam('Ammonia', entry.ammonia?.toStringAsFixed(2) ?? '-', Icons.warning_amber_rounded),
+              _buildParam('Nitrite', entry.nitrite?.toStringAsFixed(2) ?? '-', Icons.dangerous_outlined),
+              _buildParam('Salinity', entry.salinity?.toStringAsFixed(1) ?? '-', Icons.waves),
+              _buildParam('Temp', '${entry.temperature?.toStringAsFixed(1) ?? '-'}°C', Icons.thermostat),
+              _buildParam('DO', entry.dissolvedOxygen?.toStringAsFixed(1) ?? '-', Icons.air),
+            ],
+          ),
+          if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Notes:',
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.gray600),
+            ),
+            const SizedBox(height: 4),
+            Text(entry.notes!, style: TextStyle(color: AppColors.gray700)),
+          ]
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParam(String label, String value, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 12, color: AppColors.gray500),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(fontSize: 11, color: AppColors.gray600)),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.gray900)),
+      ],
+    );
+  }
+}
+
 class SectionHeader extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -1379,6 +1553,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final farmProvider = context.watch<FarmProvider>();
     final tankProvider = context.watch<TankProvider>();
 
+    // TODO: Calculate global feed metrics. This requires a larger architectural
+    // change to fetch feed data for all tanks, possibly through a global provider
+    // or backend aggregation, to avoid performance issues.
+    final totalBiomass = tankProvider.tanks.fold<double>(0, (sum, tank) => sum + tank.biomass);
+
     return Scaffold(
       backgroundColor: AppColors.gray100,
       body: SafeArea(
@@ -1404,7 +1583,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
-                            // Show farm selector
+                            _showFarmSelector(context);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -1613,49 +1792,68 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 3,
-                      childAspectRatio: 1.2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                    Column(
                       children: [
-                        StatCard(
-                          label: 'Total Tanks',
-                          value: '${tankProvider.tanks.length}',
-                          icon: Icons.water_drop,
-                          color: AppColors.primary,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: StatCard(
+                                label: 'Total Tanks',
+                                value: '${tankProvider.tanks.length}',
+                                icon: Icons.water_drop,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: StatCard(
+                                label: 'Feed Consumed',
+                                value: '0 kg',
+                                icon: Icons.food_bank,
+                                color: AppColors.success,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: StatCard(
+                                label: 'Avg FCR',
+                                value: '0.00',
+                                icon: Icons.trending_up,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ],
                         ),
-                        StatCard(
-                          label: 'Feed Consumed',
-                          value: '0 kg',
-                          icon: Icons.food_bank,
-                          color: AppColors.success,
-                        ),
-                        StatCard(
-                          label: 'Avg FCR',
-                          value: '0.00',
-                          icon: Icons.trending_up,
-                          color: AppColors.warning,
-                        ),
-                        StatCard(
-                          label: 'Total Biomass',
-                          value: '0 kg',
-                          icon: Icons.scale,
-                          color: AppColors.info,
-                        ),
-                        StatCard(
-                          label: 'Feed Today',
-                          value: '0 kg',
-                          icon: Icons.today,
-                          color: AppColors.primary,
-                        ),
-                        StatCard(
-                          label: 'Feed Waste %',
-                          value: '0%',
-                          icon: Icons.warning,
-                          color: AppColors.danger,
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: StatCard(
+                                label: 'Total Biomass',
+                                value: '${totalBiomass.toStringAsFixed(0)} kg',
+                                icon: Icons.scale,
+                                color: AppColors.info,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: StatCard(
+                                label: 'Feed Today',
+                                value: '0 kg',
+                                icon: Icons.today,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: StatCard(
+                                label: 'Feed Waste %',
+                                value: '0%',
+                                icon: Icons.warning,
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1667,102 +1865,107 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.inventory,
                     ),
                     const SizedBox(height: 12),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.5,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                    Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.gray200),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    '0 kg',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.gray200),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      '0 kg',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  ),
-                                  const Text(
-                                    'Feed Stock',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.gray600,
+                                    const Text(
+                                      'Feed Stock',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.gray600,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: () {},
-                                  icon: const Icon(Icons.add, size: 16),
-                                  label: const Text('Add Stock'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.gray700,
-                                    side: BorderSide(color: AppColors.gray300),
+                                  ],
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {},
+                                    icon: const Icon(Icons.add, size: 16),
+                                    label: const Flexible(
+                                      child: Text('Add Stock',
+                                          overflow: TextOverflow.ellipsis),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.gray700,
+                                      side: BorderSide(color: AppColors.gray300),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.gray200),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    '0 Items',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.gray200),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      '0 Items',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  ),
-                                  const Text(
-                                    'Medicine & Minerals',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.gray600,
+                                    const Text(
+                                      'Medicine & Minerals',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.gray600,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: () {},
-                                  icon: const Icon(Icons.medical_services, size: 16),
-                                  label: const Text('Manage'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.gray700,
-                                    side: BorderSide(color: AppColors.gray300),
+                                  ],
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {},
+                                    icon: const Icon(Icons.medical_services, size: 16),
+                                    label: const Flexible(
+                                      child:
+                                          Text('Manage', overflow: TextOverflow.ellipsis),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.gray700,
+                                      side: BorderSide(color: AppColors.gray300),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -1805,9 +2008,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          onEdit: () {
-                            _showEditTankDialog(context, tank);
-                          },
+                          onEdit: () => _showTankDialog(context, tank.farmId, tank: tank),
                           onDelete: () {
                             _showDeleteConfirmation(context, tank.id);
                           },
@@ -1821,21 +2022,108 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: farmProvider.farms.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FeedLogScreen(),
+    );
+  }
+
+  void _showFarmSelector(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Consumer<FarmProvider>(
+          builder: (context, provider, child) {
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Text(
+                      'Select Farm',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Log Feed'),
-              backgroundColor: AppColors.primary,
-            )
-          : null,
+                  const Divider(),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: provider.farms.length,
+                      itemBuilder: (context, index) {
+                        final farm = provider.farms[index];
+                        final isSelected = farm.id == provider.currentFarm?.id;
+                        return ListTile(
+                          leading: Icon(
+                            Icons.agriculture,
+                            color: isSelected ? AppColors.primary : AppColors.gray500,
+                          ),
+                          title: Text(
+                            farm.name,
+                            style: TextStyle(
+                              color: isSelected ? AppColors.primary : AppColors.gray900,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          onTap: () {
+                            provider.selectFarm(farm);
+                            context.read<TankProvider>().loadTanks(farm.id);
+                            Navigator.pop(context);
+                          },
+                          trailing: isSelected
+                              ? PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert),
+                                  onSelected: (value) {
+                                    Navigator.pop(context); // Close bottom sheet first
+                                    if (value == 'edit') {
+                                      _showEditFarmDialog(context, farm);
+                                    } else if (value == 'delete') {
+                                      _showDeleteFarmConfirmationDialog(context, farm);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text('Edit Farm'),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(
+                                        'Delete Farm',
+                                        style: TextStyle(color: AppColors.danger),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : isSelected
+                                  ? const Icon(Icons.check, color: AppColors.primary)
+                                  : null,
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.add, color: AppColors.primary),
+                    title: const Text(
+                      'Add New Farm',
+                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAddFarmDialog(context);
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1913,18 +2201,66 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showAddTankDialog(BuildContext context, String farmId) {
-    final nameController = TextEditingController();
-    final sizeController = TextEditingController();
-    final seedController = TextEditingController();
-    final plSizeController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
+  void _showEditFarmDialog(BuildContext context, Farm farm) {
+    final nameController = TextEditingController(text: farm.name);
+    final locationController = TextEditingController(text: farm.location);
+    final contactController = TextEditingController(text: farm.contact);
+    final phoneController = TextEditingController(text: farm.phone);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Farm'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Farm Name')),
+              TextField(controller: locationController, decoration: const InputDecoration(labelText: 'Location')),
+              TextField(controller: contactController, decoration: const InputDecoration(labelText: 'Contact Person')),
+              TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone Number')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final updatedFarm = Farm(
+                id: farm.id,
+                name: nameController.text,
+                location: locationController.text,
+                contact: contactController.text,
+                phone: phoneController.text,
+              );
+              await context.read<FarmProvider>().updateFarm(updatedFarm);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Save Changes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTankDialog(BuildContext context, String farmId, {Tank? tank}) {
+    final isEditing = tank != null;
+    final nameController = TextEditingController(text: tank?.name);
+    final sizeController = TextEditingController(text: tank?.size?.toString());
+    final seedController = TextEditingController(text: tank?.initialSeed?.toString());
+    final plSizeController = TextEditingController(text: tank?.plSize);
+    DateTime selectedDate = tank?.stockingDate ?? DateTime.now();
+
+    // Default values for dropdowns
+    int blindWeek1 = tank?.blindWeek1 ?? 2;
+    int blindStd = tank?.blindStd ?? 4;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Add New Tank'),
+        builder: (context, setState) {
+          return AlertDialog(
+          title: Text(isEditing ? 'Edit Tank' : 'Add New Tank'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1932,8 +2268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Tank / Pond Name',
-                    hintText: 'e.g. Pond A',
+                    labelText: 'Tank Name',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1943,8 +2278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextField(
                         controller: sizeController,
                         decoration: const InputDecoration(
-                          labelText: 'Area (acres)',
-                          hintText: 'e.g. 1.5',
+                          labelText: 'Area (acres)'
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -1954,8 +2288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextField(
                         controller: seedController,
                         decoration: const InputDecoration(
-                          labelText: 'Stocking Count',
-                          hintText: 'e.g. 100000',
+                          labelText: 'Stocking Count'
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -1969,8 +2302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextField(
                         controller: plSizeController,
                         decoration: const InputDecoration(
-                          labelText: 'PL Size',
-                          hintText: 'e.g. PL12',
+                          labelText: 'PL Size'
                         ),
                       ),
                     ),
@@ -1991,7 +2323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             labelText: 'Stocking Date',
                           ),
                           child: Text(
-                            '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                            AppDateUtils.getFormattedDate(selectedDate),
                           ),
                         ),
                       ),
@@ -2003,7 +2335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: 2,
+                        value: blindWeek1,
                         decoration: const InputDecoration(
                           labelText: 'Week 1 Feeds',
                         ),
@@ -2012,13 +2344,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           DropdownMenuItem(value: 3, child: Text('3 Feeds')),
                           DropdownMenuItem(value: 4, child: Text('4 Feeds')),
                         ],
-                        onChanged: (value) {},
+                        onChanged: (value) => setState(() => blindWeek1 = value!),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: 4,
+                        value: blindStd,
                         decoration: const InputDecoration(
                           labelText: 'Standard Feeds',
                         ),
@@ -2027,7 +2359,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           DropdownMenuItem(value: 4, child: Text('4 Feeds')),
                           DropdownMenuItem(value: 5, child: Text('5 Feeds')),
                         ],
-                        onChanged: (value) {},
+                        onChanged: (value) => setState(() => blindStd = value!),
                       ),
                     ),
                   ],
@@ -2042,114 +2374,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isNotEmpty) {
-                  final tank = Tank(
-                    id: '',
-                    farmId: farmId,
-                    name: nameController.text,
-                    size: double.tryParse(sizeController.text),
-                    stockingDate: selectedDate,
-                    initialSeed: int.tryParse(seedController.text),
-                    plSize: plSizeController.text,
-                    checkTrays: 2,
-                  );
-                  await context.read<TankProvider>().addTank(tank);
-                  if (context.mounted) Navigator.pop(context);
-                }
-              },
-              child: const Text('Save Tank'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                if (nameController.text.isEmpty) return;
 
-  void _showEditTankDialog(BuildContext context, Tank tank) {
-    final nameController = TextEditingController(text: tank.name);
-    final sizeController = TextEditingController(text: tank.size?.toString());
-    final seedController = TextEditingController(text: tank.initialSeed?.toString());
-    final plSizeController = TextEditingController(text: tank.plSize);
-    DateTime selectedDate = tank.stockingDate;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Edit Tank'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Tank Name'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: sizeController,
-                  decoration: const InputDecoration(labelText: 'Area (acres)'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: seedController,
-                  decoration: const InputDecoration(labelText: 'Stocking Count'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: plSizeController,
-                  decoration: const InputDecoration(labelText: 'PL Size'),
-                ),
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime.now(),
-                    );
-                    if (date != null) setState(() => selectedDate = date);
-                  },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Stocking Date'),
-                    child: Text(
-                      '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final updatedTank = Tank(
-                  id: tank.id,
-                  farmId: tank.farmId,
+                final newTankData = Tank(
+                  id: tank?.id ?? '',
+                  farmId: farmId,
                   name: nameController.text,
                   size: double.tryParse(sizeController.text),
                   stockingDate: selectedDate,
                   initialSeed: int.tryParse(seedController.text),
                   plSize: plSizeController.text,
-                  checkTrays: tank.checkTrays,
-                  blindDuration: tank.blindDuration,
-                  blindWeek1: tank.blindWeek1,
-                  blindStd: tank.blindStd,
+                  checkTrays: tank?.checkTrays ?? 2,
+                  blindWeek1: blindWeek1,
+                  blindStd: blindStd,
                 );
-                await context.read<TankProvider>().updateTank(updatedTank);
+
+                if (isEditing) {
+                  await context.read<TankProvider>().updateTank(newTankData);
+                } else {
+                  await context.read<TankProvider>().addTank(newTankData);
+                }
                 if (context.mounted) Navigator.pop(context);
               },
-              child: const Text('Update'),
+              child: Text(isEditing ? 'Update Tank' : 'Save Tank'),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -2157,7 +2408,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showDeleteConfirmation(BuildContext context, String tankId) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Delete Tank?'),
         content: const Text(
           'Are you sure you want to delete this tank? All associated data will be permanently deleted.',
@@ -2177,6 +2428,35 @@ class _HomeScreenState extends State<HomeScreen> {
               foregroundColor: Colors.white,
             ),
             child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteFarmConfirmationDialog(BuildContext context, Farm farm) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Delete ${farm.name}?'),
+        content: const Text(
+          'Are you sure you want to delete this farm? All associated tanks and data will be permanently deleted. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await context.read<FarmProvider>().deleteFarm(farm.id);
+              if (context.mounted) Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Farm'),
           ),
         ],
       ),
@@ -2205,6 +2485,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
   Future<void> _loadData() async {
     await context.read<FeedProvider>().loadEntries(widget.tank.id);
     await context.read<HarvestProvider>().loadHarvests(widget.tank.id);
+    await context.read<WaterQualityProvider>().loadEntries(widget.tank.id);
   }
 
   Widget _buildFeedChart(List<FeedEntry> entries) {
@@ -2222,6 +2503,11 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
       dailyAmounts[dateKey] = (dailyAmounts[dateKey] ?? 0) + entry.amount;
     }
 
+    final maxAmount = dailyAmounts.values.isEmpty
+        ? 10.0 // Default max Y if no data
+        : dailyAmounts.values.reduce((a, b) => a > b ? a : b);
+    final maxYValue = (maxAmount * 1.2).ceilToDouble();
+
     final spots = dailyAmounts.values.toList().asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value);
     }).toList();
@@ -2231,8 +2517,8 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: true,
-          horizontalInterval: 2,
-          verticalInterval: 2,
+          horizontalInterval: (maxYValue / 5).ceilToDouble(),
+          verticalInterval: 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
               color: AppColors.gray200,
@@ -2280,7 +2566,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 2,
+              interval: (maxYValue / 5).ceilToDouble(),
               reservedSize: 40,
               getTitlesWidget: (value, meta) {
                 return Padding(
@@ -2304,7 +2590,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
         minX: 0, 
         maxX: (spots.length - 1).toDouble(),
         minY: 0,
-        maxY: 12,
+        maxY: maxYValue,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
@@ -2337,32 +2623,37 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
   Widget build(BuildContext context) {
     final feedProvider = context.watch<FeedProvider>();
     final harvestProvider = context.watch<HarvestProvider>();
+    final waterQualityProvider = context.watch<WaterQualityProvider>();
     
     return Scaffold(
       backgroundColor: AppColors.gray100,
       body: DefaultTabController(
-        length: 4,
+        length: 5,
         child: Scaffold(
           appBar: AppBar(
-            title: Text(widget.tank.name),
-            backgroundColor: Colors.white,
+            title: Text(widget.tank.name), 
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
             elevation: 0,
-            bottom: const TabBar(
+            bottom: TabBar(
               tabs: [
                 Tab(text: 'Overview'),
                 Tab(text: 'Logs'),
+                Tab(text: 'Water'),
                 Tab(text: 'Analytics'),
                 Tab(text: 'Actions'),
               ],
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.gray600,
-              indicatorColor: AppColors.primary,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              isScrollable: true,
             ),
           ),
           body: TabBarView(
             children: [
               _buildOverviewTab(feedProvider, harvestProvider),
               _buildLogsTab(feedProvider),
+              _buildWaterQualityTab(waterQualityProvider),
               _buildAnalyticsTab(),
               _buildActionsTab(),
             ],
@@ -2516,6 +2807,23 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
     );
   }
 
+  Widget _buildWaterQualityTab(WaterQualityProvider provider) {
+    if (provider.entries.isEmpty) {
+      return const Center(child: Text('No water quality logs yet.'));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: provider.entries.length,
+      itemBuilder: (context, index) {
+        final entry = provider.entries[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: WaterQualityEntryCard(entry: entry),
+        );
+      },
+    );
+  }
+
   Widget _buildAnalyticsTab() {
     return const Center(
       child: Text('Analytics coming soon...'),
@@ -2551,7 +2859,14 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WaterQualityLogScreen(tankId: widget.tank.id),
+                  ),
+                );
+              },
               icon: const Icon(Icons.water_drop),
               label: const Text('Log Water Quality'),
               style: ElevatedButton.styleFrom(
@@ -2578,6 +2893,109 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
         ],
       ),
     );
+  }
+}
+
+class WaterQualityLogScreen extends StatefulWidget {
+  final String tankId;
+  const WaterQualityLogScreen({super.key, required this.tankId});
+
+  @override
+  State<WaterQualityLogScreen> createState() => _WaterQualityLogScreenState();
+}
+
+class _WaterQualityLogScreenState extends State<WaterQualityLogScreen> {
+  final _formKey = GlobalKey<FormState>();
+  DateTime _selectedDate = DateTime.now();
+
+  final _phController = TextEditingController();
+  final _ammoniaController = TextEditingController();
+  final _nitriteController = TextEditingController();
+  final _salinityController = TextEditingController();
+  final _tempController = TextEditingController();
+  final _doController = TextEditingController();
+  final _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _phController.dispose();
+    _ammoniaController.dispose();
+    _nitriteController.dispose();
+    _salinityController.dispose();
+    _tempController.dispose();
+    _doController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Log Water Quality'),
+        backgroundColor: AppColors.info,
+        foregroundColor: Colors.white,
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            InkWell(
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                );
+                if (date != null) setState(() => _selectedDate = date);
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Date',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                child: Text(AppDateUtils.getFormattedDate(_selectedDate)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(child: _buildTextField(_phController, 'pH', 'e.g., 7.8')),
+              const SizedBox(width: 16),
+              Expanded(child: _buildTextField(_tempController, 'Temperature (°C)', 'e.g., 28.5')),
+            ]),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(child: _buildTextField(_ammoniaController, 'Ammonia (ppm)', 'e.g., 0.25')),
+              const SizedBox(width: 16),
+              Expanded(child: _buildTextField(_nitriteController, 'Nitrite (ppm)', 'e.g., 0.1')),
+            ]),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(child: _buildTextField(_salinityController, 'Salinity (ppt)', 'e.g., 15')),
+              const SizedBox(width: 16),
+              Expanded(child: _buildTextField(_doController, 'D.O. (ppm)', 'e.g., 5.5')),
+            ]),
+            const SizedBox(height: 16),
+            TextFormField(controller: _notesController, decoration: const InputDecoration(labelText: 'Notes (optional)', border: OutlineInputBorder()), maxLines: 3),
+            const SizedBox(height: 24),
+            ElevatedButton(onPressed: _saveEntry, style: ElevatedButton.styleFrom(backgroundColor: AppColors.info, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('Save Water Log')),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, String hint) => TextFormField(controller: controller, decoration: InputDecoration(labelText: label, hintText: hint, border: const OutlineInputBorder()), keyboardType: const TextInputType.numberWithOptions(decimal: true));
+
+  void _saveEntry() async {
+    if (_formKey.currentState!.validate()) {
+      final entry = WaterQualityEntry(id: '', tankId: widget.tankId, date: _selectedDate, ph: double.tryParse(_phController.text), ammonia: double.tryParse(_ammoniaController.text), nitrite: double.tryParse(_nitriteController.text), salinity: double.tryParse(_salinityController.text), temperature: double.tryParse(_tempController.text), dissolvedOxygen: double.tryParse(_doController.text), notes: _notesController.text);
+      await context.read<WaterQualityProvider>().addEntry(entry);
+      if (context.mounted) Navigator.pop(context);
+    }
   }
 }
 
@@ -2633,6 +3051,30 @@ class _FeedLogScreenState extends State<FeedLogScreen> {
                 onChanged: (value) => setState(() => _selectedTankId = value),
                 validator: (v) => v == null ? 'Please select a tank' : null,
               ),
+            
+            const SizedBox(height: 16),
+
+            InkWell(
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                );
+                if (date != null) {
+                  setState(() => _selectedDate = date);
+                }
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Date',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                child: Text(AppDateUtils.getFormattedDate(_selectedDate)),
+              ),
+            ),
             
             const SizedBox(height: 16),
             
@@ -2724,6 +3166,78 @@ class _FeedLogScreenState extends State<FeedLogScreen> {
   }
 }
 
+class AnalyticsScreen extends StatelessWidget {
+  const AnalyticsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Analytics'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+      ),
+      body: const Center(
+        child: Text('Global analytics coming soon...'),
+      ),
+    );
+  }
+}
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _pageIndex = 0;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _pageIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) => setState(() => _pageIndex = index),
+        children: const [
+          HomeScreen(),
+          FeedLogScreen(),
+          AnalyticsScreen(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _pageIndex,
+        onTap: (index) => _pageController.jumpToPage(index),
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.gray600,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: 'Overview'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline), activeIcon: Icon(Icons.add_circle), label: 'Log Feed'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.analytics_outlined), activeIcon: Icon(Icons.analytics), label: 'Analytics'),
+        ],
+      ),
+    );
+  }
+}
+
 // ========== MAIN APP ==========
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2751,6 +3265,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FarmProvider()),
         ChangeNotifierProvider(create: (_) => TankProvider()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
+        ChangeNotifierProvider(create: (_) => WaterQualityProvider()),
         ChangeNotifierProvider(create: (_) => HarvestProvider()),
       ],
       child: MaterialApp(
@@ -2770,7 +3285,7 @@ class MyApp extends StatelessWidget {
         home: Consumer<AuthNotifier>(
           builder: (context, auth, _) {
             if (auth.isAuthenticated) {
-              return const HomeScreen();
+              return const MainScreen();
             }
             return LoginScreen();
           },
