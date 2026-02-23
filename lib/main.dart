@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -34,7 +38,7 @@ class AppColors {
 }
 
 // ========== DATE UTILITIES ==========
-class DateUtils {
+class AppDateUtils {
   static String getFormattedDate([DateTime? date]) {
     final d = date ?? DateTime.now();
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -105,7 +109,7 @@ class Tank {
   String? healthNotes;
   int deadCount;
   
-  int get doc => DateUtils.getDaysOld(stockingDate);
+  int get doc => AppDateUtils.getDaysOld(stockingDate);
   
   Tank({
     required this.id,
@@ -219,74 +223,109 @@ class HarvestEntry {
   );
 }
 
-// ========== SERVICES ==========
-class AuthService {
+// ========== PROVIDERS ==========
+class AuthNotifier extends ChangeNotifier {
+  late final StreamSubscription<AuthState> _authStateSubscription;
   User? _user;
+
+  AuthNotifier() {
+    _user = Supabase.instance.client.auth.currentUser;
+    _authStateSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      _user = data.session?.user;
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription.cancel();
+    super.dispose();
+  }
+
   User? get user => _user;
 
   Future<bool> signIn(String email, String password) async {
     try {
-      final response = await Supabase.instance.client.auth
+      print("🔐 Attempting login with: $email");
+      await Supabase.instance.client.auth
           .signInWithPassword(email: email, password: password);
-      _user = response.user;
+      print("✅ Login successful!");
       return true;
+    } on AuthException catch (e) {
+      print("❌ Auth Error: ${e.message}");
+      return false;
     } catch (e) {
+      print("❌ Unexpected error: $e");
       return false;
     }
   }
 
   Future<bool> signUp(String email, String password) async {
     try {
-      final response = await Supabase.instance.client.auth
+      print("📝 Attempting signup with: $email");
+      await Supabase.instance.client.auth
           .signUp(email: email, password: password);
-      _user = response.user;
+      print("✅ Signup request sent. Please check your email for confirmation.");
       return true;
+    } on AuthException catch (e) {
+      print("❌ Auth Error: ${e.message}");
+      return false;
     } catch (e) {
+      print("❌ Unexpected error: $e");
       return false;
     }
   }
 
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
-    _user = null;
   }
 
-  bool get isAuthenticated => _user != null;
-}
+  Future<bool> signInWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        print("🔐 Attempting Google login for web...");
+        return await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          // For web, configure redirect URLs in your Supabase project settings.
+        );
+      } else {
+        // Mobile-specific implementation
+        print("🔐 Attempting Google login for mobile...");
 
-// ========== PROVIDERS ==========
-class AuthNotifier extends ChangeNotifier {
-  final AuthService _authService;
-  User? _user;
-  
-  AuthNotifier(this._authService) {
-    _user = _authService.user;
-  }
+        // IMPORTANT: Replace with your actual Google Cloud web client ID
+        const webClientId = '782759620106-3uvpbdnvsog7fto0ckiht7p6evv3cgjs.apps.googleusercontent.com';
 
-  User? get user => _user;
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          serverClientId: webClientId,
+        );
 
-  Future<bool> signIn(String email, String password) async {
-    final success = await _authService.signIn(email, password);
-    if (success) {
-      _user = _authService.user;
-      notifyListeners();
+        final googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          print("Google sign-in was cancelled by user.");
+          return false;
+        }
+        final googleAuth = await googleUser.authentication;
+        final accessToken = googleAuth.accessToken;
+        final idToken = googleAuth.idToken;
+
+        if (accessToken == null || idToken == null) {
+          throw 'Google sign-in failed: Missing token.';
+        }
+
+        await Supabase.instance.client.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+
+        print("✅ Google login successful!");
+        return true;
+      }
+    } catch (e) {
+      print("❌ Google Sign-In Error: $e");
+      return false;
     }
-    return success;
-  }
-
-  Future<bool> signUp(String email, String password) async {
-    final success = await _authService.signUp(email, password);
-    if (success) {
-      _user = _authService.user;
-      notifyListeners();
-    }
-    return success;
-  }
-
-  Future<void> signOut() async {
-    await _authService.signOut();
-    _user = null;
-    notifyListeners();
   }
 
   bool get isAuthenticated => _user != null;
@@ -355,7 +394,7 @@ class TankProvider extends ChangeNotifier {
           'farm_id': tank.farmId,
           'name': tank.name,
           'size': tank.size,
-          'stocking_date': DateUtils.getFormattedDate(tank.stockingDate),
+          'stocking_date': AppDateUtils.getFormattedDate(tank.stockingDate),
           'initial_seed': tank.initialSeed,
           'pl_size': tank.plSize,
           'check_trays': tank.checkTrays,
@@ -375,7 +414,7 @@ class TankProvider extends ChangeNotifier {
         .update({
           'name': tank.name,
           'size': tank.size,
-          'stocking_date': DateUtils.getFormattedDate(tank.stockingDate),
+          'stocking_date': AppDateUtils.getFormattedDate(tank.stockingDate),
           'initial_seed': tank.initialSeed,
           'pl_size': tank.plSize,
           'check_trays': tank.checkTrays,
@@ -411,9 +450,9 @@ class FeedProvider extends ChangeNotifier {
   double get totalFeed => _entries.fold(0, (sum, e) => sum + e.amount);
   
   double get todayFeed {
-    final today = DateUtils.getFormattedDate();
+    final today = AppDateUtils.getFormattedDate();
     return _entries
-        .where((e) => DateUtils.getFormattedDate(e.date) == today)
+        .where((e) => AppDateUtils.getFormattedDate(e.date) == today)
         .fold(0, (sum, e) => sum + e.amount);
   }
 
@@ -445,7 +484,7 @@ class FeedProvider extends ChangeNotifier {
         .from('feed_entries')
         .insert({
           'tank_id': entry.tankId,
-          'date': DateUtils.getFormattedDate(entry.date),
+          'date': AppDateUtils.getFormattedDate(entry.date),
           'amount': entry.amount,
           'time': entry.time,
           'tray_result': entry.trayResult,
@@ -508,7 +547,7 @@ class HarvestProvider extends ChangeNotifier {
         .from('harvest_entries')
         .insert({
           'tank_id': entry.tankId,
-          'date': DateUtils.getFormattedDate(entry.date),
+          'date': AppDateUtils.getFormattedDate(entry.date),
           'weight': entry.weight,
           'count': entry.count,
           'price': entry.price,
@@ -1230,7 +1269,14 @@ class LoginScreen extends StatelessWidget {
                           emailController.text,
                           passwordController.text,
                         );
-                        if (!success && context.mounted) {
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Registration successful! Please check your email to confirm.'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        } else if (!success && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Registration failed'),
@@ -1242,6 +1288,50 @@ class LoginScreen extends StatelessWidget {
                       child: Text(
                         'Register',
                         style: TextStyle(color: AppColors.primary),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text("OR", style: TextStyle(color: AppColors.gray600)),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final auth = context.read<AuthNotifier>();
+                          final success = await auth.signInWithGoogle();
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Google Sign-In failed. Please try again.'),
+                                backgroundColor: AppColors.danger,
+                              ),
+                            );
+                          }
+                        },
+                        // IMPORTANT: Add 'assets/google_logo.png' to your project
+                        // and declare it in pubspec.yaml
+                        icon: Image.asset('assets/google_logo.png', height: 22.0),
+                        label: const Text(
+                          'Sign in with Google',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.gray700,
+                          side: BorderSide(color: AppColors.gray300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -1357,7 +1447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Text(
-                          DateUtils.getDisplayDate(DateTime.now()),
+                          AppDateUtils.getDisplayDate(DateTime.now()),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -2103,7 +2193,6 @@ class TankDetailScreen extends StatefulWidget {
 }
 
 class _TankDetailScreenState extends State<TankDetailScreen> {
-  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -2118,24 +2207,24 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
     await context.read<HarvestProvider>().loadHarvests(widget.tank.id);
   }
 
-  Widget _buildFeedChart() {
-    // Sample data - replace with real data from feedProvider
-    final spots = [
-      const FlSpot(0, 3),
-      const FlSpot(1, 4),
-      const FlSpot(2, 3.5),
-      const FlSpot(3, 5),
-      const FlSpot(4, 4),
-      const FlSpot(5, 6),
-      const FlSpot(6, 5.5),
-      const FlSpot(7, 7),
-      const FlSpot(8, 6.5),
-      const FlSpot(9, 8),
-      const FlSpot(10, 7.5),
-      const FlSpot(11, 9),
-      const FlSpot(12, 8.5),
-      const FlSpot(13, 10),
-    ];
+  Widget _buildFeedChart(List<FeedEntry> entries) {
+    if (entries.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text('No feed data available')),
+      );
+    }
+
+    // Group entries by date and sum amounts
+    final Map<String, double> dailyAmounts = {};
+    for (var entry in entries) {
+      final dateKey = AppDateUtils.getShortDate(entry.date);
+      dailyAmounts[dateKey] = (dailyAmounts[dateKey] ?? 0) + entry.amount;
+    }
+
+    final spots = dailyAmounts.values.toList().asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value);
+    }).toList();
 
     return LineChart(
       LineChartData(
@@ -2170,13 +2259,13 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
               showTitles: true,
               reservedSize: 30,
               interval: 2,
-              getTitlesWidget: (value, meta) {
-                const days = ['1', '3', '5', '7', '9', '11', '13'];
-                if (value.toInt() % 2 == 0 && value.toInt() <= 12) {
+              getTitlesWidget: (value, meta) { 
+                final index = value.toInt();
+                if (index >= 0 && index < dailyAmounts.keys.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      days[value.toInt() ~/ 2],
+                      dailyAmounts.keys.elementAt(index),
                       style: TextStyle(
                         color: AppColors.gray600,
                         fontSize: 11,
@@ -2212,8 +2301,8 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
           show: true,
           border: Border.all(color: AppColors.gray200, width: 1),
         ),
-        minX: 0,
-        maxX: 13,
+        minX: 0, 
+        maxX: (spots.length - 1).toDouble(),
         minY: 0,
         maxY: 12,
         lineBarsData: [
@@ -2251,33 +2340,34 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
     
     return Scaffold(
       backgroundColor: AppColors.gray100,
-      appBar: AppBar(
-        title: Text(widget.tank.name),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        bottom: TabBar(
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Logs'),
-            Tab(text: 'Analytics'),
-            Tab(text: 'Actions'),
-          ],
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.gray600,
-          indicatorColor: AppColors.primary,
-          onTap: (index) {
-            setState(() => _selectedTab = index);
-          },
+      body: DefaultTabController(
+        length: 4,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.tank.name),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: 'Overview'),
+                Tab(text: 'Logs'),
+                Tab(text: 'Analytics'),
+                Tab(text: 'Actions'),
+              ],
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.gray600,
+              indicatorColor: AppColors.primary,
+            ),
+          ),
+          body: TabBarView(
+            children: [
+              _buildOverviewTab(feedProvider, harvestProvider),
+              _buildLogsTab(feedProvider),
+              _buildAnalyticsTab(),
+              _buildActionsTab(),
+            ],
+          ),
         ),
-      ),
-      body: IndexedStack(
-        index: _selectedTab,
-        children: [
-          _buildOverviewTab(feedProvider, harvestProvider),
-          _buildLogsTab(feedProvider),
-          _buildAnalyticsTab(),
-          _buildActionsTab(),
-        ],
       ),
     );
   }
@@ -2331,7 +2421,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Feed History (14 Days)',
+                  'Feed History',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -2340,7 +2430,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 200,
-                  child: _buildFeedChart(),
+                  child: _buildFeedChart(feedProvider.entries),
                 ),
               ],
             ),
@@ -2440,7 +2530,14 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FeedLogScreen(tankId: widget.tank.id),
+                  ),
+                );
+              },
               icon: const Icon(Icons.add),
               label: const Text('Log Feed'),
               style: ElevatedButton.styleFrom(
@@ -2485,21 +2582,143 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
 }
 
 class FeedLogScreen extends StatefulWidget {
-  const FeedLogScreen({super.key});
+  final String? tankId;
+  const FeedLogScreen({super.key, this.tankId});
 
   @override
   State<FeedLogScreen> createState() => _FeedLogScreenState();
 }
 
 class _FeedLogScreenState extends State<FeedLogScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String? _selectedTankId;
+  final _amountController = TextEditingController();
+  final _timeController = TextEditingController();
+  String _trayResult = 'pending';
+  DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTankId = widget.tankId;
+    _timeController.text = DateFormat('HH:mm').format(DateTime.now());
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tankProvider = context.watch<TankProvider>();
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Log Feed'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
-      body: const Center(
-        child: Text('Feed logging screen'),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (widget.tankId == null)
+              DropdownButtonFormField<String>(
+                value: _selectedTankId,
+                decoration: const InputDecoration(
+                  labelText: 'Select Tank',
+                  border: OutlineInputBorder(),
+                ),
+                items: tankProvider.tanks.map((t) => DropdownMenuItem(
+                  value: t.id,
+                  child: Text(t.name),
+                )).toList(),
+                onChanged: (value) => setState(() => _selectedTankId = value),
+                validator: (v) => v == null ? 'Please select a tank' : null,
+              ),
+            
+            const SizedBox(height: 16),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _amountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount (kg)',
+                      border: OutlineInputBorder(),
+                      suffixText: 'kg',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: _timeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Time',
+                      border: OutlineInputBorder(),
+                      suffixIcon: Icon(Icons.access_time),
+                    ),
+                    readOnly: true,
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (time != null && context.mounted) {
+                        _timeController.text = time.format(context);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              value: _trayResult,
+              decoration: const InputDecoration(
+                labelText: 'Tray Observation',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'pending', child: Text('Pending Check')),
+                DropdownMenuItem(value: 'empty', child: Text('Empty (All Eaten)')),
+                DropdownMenuItem(value: 'little', child: Text('Little Left')),
+                DropdownMenuItem(value: 'half', child: Text('Half Left')),
+                DropdownMenuItem(value: 'too-much', child: Text('Too Much Left')),
+              ],
+              onChanged: (v) => setState(() => _trayResult = v!),
+            ),
+
+            const SizedBox(height: 24),
+
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate() && _selectedTankId != null) {
+                  final entry = FeedEntry(
+                    id: '', // Generated by DB
+                    tankId: _selectedTankId!,
+                    date: _selectedDate,
+                    amount: double.parse(_amountController.text),
+                    time: _timeController.text,
+                    trayResult: _trayResult,
+                  );
+                  
+                  await context.read<FeedProvider>().addEntry(entry);
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text('Save Entry'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2509,10 +2728,14 @@ class _FeedLogScreenState extends State<FeedLogScreen> {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: 'https://vwdzrzdvmgoqezatjhbr.supabase.co',
-    anonKey: 'sb_publishable_z_5942T3HoGRt-eXcVcU5w_Isd3pDVz',
-  );
+  try {
+    await Supabase.initialize(
+      url: 'https://vwdzrzdvmgoqezatjhbr.supabase.co',
+      anonKey: 'sb_publishable_z_5942T3HoGRt-eXcVcU5w_Isd3pDVz',
+    );
+  } catch (e) {
+    debugPrint('Supabase initialization failed: $e');
+  }
 
   runApp(const MyApp());
 }
@@ -2524,8 +2747,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (context) => AuthNotifier(context.read<AuthService>())),
+        ChangeNotifierProvider(create: (_) => AuthNotifier()),
         ChangeNotifierProvider(create: (_) => FarmProvider()),
         ChangeNotifierProvider(create: (_) => TankProvider()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
