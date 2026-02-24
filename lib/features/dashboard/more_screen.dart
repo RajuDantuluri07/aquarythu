@@ -72,7 +72,7 @@ class MoreScreen extends StatelessWidget {
                   // Pricing Plan Section
                   _buildMenuCard(
                     context,
-                    icon: Icons.pricing,
+                    icon: Icons.monetization_on,
                     title: 'Pricing Plans',
                     subtitle: 'View our pricing and features',
                     color: AppColors.warning,

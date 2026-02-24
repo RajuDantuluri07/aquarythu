@@ -864,17 +864,47 @@ class _HomeScreenState extends State<HomeScreen> {
                           DropdownMenuItem(value: 4, child: Text('4 Feeds')),
                           DropdownMenuItem(value: 5, child: Text('5 Feeds')),
                         ],
-                        on {
+                        onChanged: (value) => setState(() => blindStd = value!),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newTankData = Tank(
+                  id: tank?.id ?? '',
+                  farmId: farmId,
+                  name: nameController.text,
+                  size: double.tryParse(sizeController.text),
+                  stockingDate: selectedDate,
+                  initialSeed: int.tryParse(seedController.text),
+                  plSize: plSizeController.text,
+                  blindWeek1: blindWeek1,
+                  blindStd: blindStd,
+                );
+                if (isEditing) {
                   await context.read<TankProvider>().updateTank(newTankData);
                 } else {
                   await context.read<TankProvider>().addTank(newTankData);
                 }
                 if (context.mounted) Navigator.pop(context);
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
               child: Text(isEditing ? 'Update Tank' : 'Save Tank'),
             ),
           ],
-        );
+          );
         },
       ),
     );
