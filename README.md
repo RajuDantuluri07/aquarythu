@@ -1,458 +1,543 @@
-# aquarythu
+AQUARYTHU
+Complete Product Requirement Document (PRD)
+Technical & Product Architecture Specification
+1️⃣ PRODUCT VISION
+Mission
 
-A new Flutter project.
+Help shrimp farmers achieve better FCR through disciplined feeding and water-based best practices.
 
-## Getting Started
+Core Philosophy
 
-🌊 Core of AquaRythu
+AquaRythu does not:
 
-The core of AquaRythu is very simple but very powerful:
+Guarantee profit
 
-Make shrimp farmers save feed through strict feeding discipline + intelligent decision support.
+Sell feed
 
-Everything else is secondary.
+Recommend brands
 
-🎯 1️⃣ Core Mission
+Replace farmer judgment
 
-AquaRythu is NOT:
+AquaRythu enforces:
 
-❌ A marketplace
+Feeding discipline
 
-❌ A feed-selling app
+Tray-based execution
 
-❌ A medicine advisory app
+Water quality tracking
 
-❌ A complicated ERP
+Behavior-based intelligence
 
-It IS:
+2️⃣ END GOAL
+Primary Outcome
 
-✅ A Feed Discipline + Feed Intelligence System for shrimp farmers.
+Improve FCR by enforcing structured best practices.
 
-🧠 2️⃣ Core Philosophy (Locked)
+𝐹
+𝐶
+𝑅
+=
+𝑇
+𝑜
+𝑡
+𝑎
+𝑙
+𝐹
+𝑒
+𝑒
+𝑑
+𝑈
+𝑠
+𝑒
+𝑑
+/
+𝑇
+𝑜
+𝑡
+𝑎
+𝑙
+𝐵
+𝑖
+𝑜
+𝑚
+𝑎
+𝑠
+𝑠
+𝐻
+𝑎
+𝑟
+𝑣
+𝑒
+𝑠
+𝑡
+𝑒
+𝑑
+FCR=TotalFeedUsed/TotalBiomassHarvested
 
-You already decided this clearly:
+Feed = 55–65% of shrimp farming cost.
 
-💰 Monetization must come from feed-saving intelligence.
-📝 Feed logging is FREE forever.
-🧠 Intelligence layer = paid.
+Small FCR improvement (0.1–0.2) = major margin gain.
 
-So the real product is not logging.
-The real product is decision intelligence.
+3️⃣ TARGET USERS
 
-🐟 3️⃣ What Is the Real Problem in Shrimp Farming?
+Primary:
 
-The biggest cost in shrimp farming:
+Vannamei shrimp farmers (India)
 
-⚠️ Feed = 55–65% of total farming cost
+1–10 acre farms
 
-And the biggest mistake farmers make:
+Tray feeding workflow
 
-Overfeeding
+Secondary:
 
-Blind feeding too long
+Supervisors
 
-Ignoring tray signals
+Farm workers
 
-Not tracking discipline
+4️⃣ PRICING MODEL (LOCKED)
+FREE PLAN
 
-No FCR awareness until harvest
+Unlimited feed logging
 
-So AquaRythu solves:
+Unlimited ponds
 
-“How much feed should I give today?”
+Blind feeding auto schedule
 
-That one question.
+Tray logging (per tray mandatory)
 
-⚙️ 4️⃣ Operational Core Workflow
-Step 1: Blind Feeding Phase (0–25/30 DOC)
+Feed mix instructions
 
-Auto-generated schedule
+Water test logging
 
-Based on stocking count
+History storage
 
-Editable by farmer
+Offline capability
 
-Workers follow set quantity
+PRO PLAN (~₹499/month)
 
-Step 2: Tray-Based Feeding
+Feed increase/decrease suggestions
 
-Farmer sees:
+Overfeeding alerts
 
-Pond status
-
-Suggested feed
-
-Feed trend
-
-Over/under warning
-
-Farmer sets final quantity
-
-Worker executes exactly
-
-👆 This execution control is core.
-
-📊 5️⃣ Core Value Engine
-
-AquaRythu runs on 3 internal engines:
-
-🔹 A. Feed Discipline Engine (Basic Plan)
-
-Increase/decrease suggestion
-
-Ideal feed range
-
-Overfeeding detection
+Underfeeding alerts
 
 Missed feed alerts
 
-Discipline score
+Feed discipline score
 
-🔹 B. Efficiency Engine (Pro Plan)
+FCR calculation
 
-FCR tracking (post 30 DOC)
+Efficiency score
 
-Feed efficiency score
+Appetite trend graph
 
 Pond comparison
+
+Water-based feeding intelligence
 
 Survival estimation
 
-Abnormal feed alerts
+Harvest readiness indicator
 
-🔹 C. Execution Engine
+Reports
 
-Worker compliance tracking
+No per-pond pricing.
+No outcome-based monetization.
 
-Feed mix instruction enforcement
+5️⃣ CORE WORKFLOW OVERVIEW
 
-Supervisor visibility
+Pond Creation
+↓
+Blind Feeding Phase (DOC 0–30)
+↓
+Automatic Transition to Tray Mode
+↓
+Structured Tray Logging
+↓
+Weekly Water Logging
+↓
+Intelligence Engine (PRO)
+↓
+FCR Optimization
 
-🏗 6️⃣ Structural Core (App Architecture)
-Logging Layer (Free Forever)
-        ↓
-Discipline Intelligence (Basic)
-        ↓
-Efficiency Optimization (Pro)
+6️⃣ MODULE LEVEL PRD
+MODULE 1: AUTHENTICATION
+Functional Requirements
 
-This layered model is your moat.
+Email + Password login
 
-🧱 7️⃣ The True Core in One Sentence
+Role selection:
 
-AquaRythu = “Feed Control System for Shrimp Farms”
+Farmer
 
-Not a farm app.
-Not a data app.
-Not an advisory app.
+Supervisor
 
-A Feed Control System.
+Worker
 
-🚀 8️⃣ Why This Core Is Powerful
+Multi-pond access
 
-Because:
+Session persistence
 
-Feed mistakes = invisible loss
+Non-functional
 
-Farmers realize loss only at harvest
+JWT-based auth
 
-You make loss visible daily
+Secure password hashing
 
-You control decision before damage happens
+Role-based access enforcement
 
-That is powerful.
+MODULE 2: FARM & POND SETUP
+Pond Creation Fields
 
-🔐 Final Locked Core Statement
+Pond name
 
-Here is your final core definition:
+Acre size
 
-AquaRythu is a decision-first feed intelligence platform that enforces feeding discipline, optimizes feed efficiency, and reduces invisible feed losses in shrimp farming.
+Stocking count
 
-If you want next, I can break this into:
+PL per m²
 
-🔥 Investor pitch core
+Stocking date
 
-🧠 Technical architecture core
+Number of trays
 
-🎯 Landing page core message
+Aeration HP
 
-💰 Monetization logic core
+Water source
 
-🛡 Long-term moat strategy core
+On Save
 
-Tell me which one.
+System auto-generates:
 
-🧠 Technical architecture core
-🧠 AquaRythu – Technical Architecture Core
+Blind feeding schedule (DOC 1–30)
 
-Your app must be simple outside, intelligent inside.
+Based on:
 
-At the heart, AquaRythu is a:
+Stocking count
 
-Online-first Feed Logging System + Intelligence Engine layered on top
+Acre size
 
-🏗 1️⃣ High-Level Architecture
-Flutter App (Mobile)
-        ↓
-Repository Layer
-        ↓
-Supabase (Auth + Postgres + Realtime)
-        ↓
-Intelligence Engine (Business Logic Layer)
+Standard feed table
 
-You already decided:
+Editable by supervisor.
 
-Repository → Supabase → Optional local cache (online-first)
+MODULE 3: BLIND FEEDING ENGINE
 
-Correct decision for MVP.
+Active when:
 
-📱 2️⃣ Mobile Layer (Flutter)
-Responsibilities:
+DOC < 30
 
-UI Screens
+Flow
 
-Feeding entry
+System suggests feed
 
-Pond dashboard
+Supervisor edits & sets final quantity
 
-Worker execution view
+Worker executes
 
-Supervisor control panel
+Round marked complete
 
-Plan upgrade screens
+Stored Data
 
-Key Principles:
+Feed quantity
 
-Farmer sets final feed quantity
+Feed type
 
-Worker sees read-only execution
+Mix instructions
 
-Intelligence only visible if plan allows
+Timestamp
 
-🗄 3️⃣ Backend Core – Supabase
+User ID
 
-Using:
+MODULE 4: TRAY MODE TRANSITION
 
-Auth (Login / Signup)
+Condition:
 
-PostgreSQL database
+DOC >= 30 → feeding_mode = tray
 
-Row Level Security (RLS)
+Manual override allowed.
 
-Realtime updates
+MODULE 5: TRAY LOGGING ENGINE
 
-Core Tables Structure
-👤 Users
+Critical core module.
 
-id
+Trigger
 
-role (farmer / supervisor / worker)
+After each feed round (~2 hours later)
 
-plan_type (free / basic / pro)
+For each tray (mandatory):
 
-🐟 Farms
+Options:
 
-id
+Completed
 
-owner_id
+Little Left
 
-🌊 Ponds
+Half
 
-id
+Too Much
 
-farm_id
+No skipping.
+All trays required.
 
-stocking_count
+Tray Score Calculation
 
-area
+Weights:
 
-DOC
+Completed = 1.0
+Little Left = 0.75
+Half = 0.5
+Too Much = 0.25
 
-🍽 Feed Logs
+Score = Average(weight)
 
-pond_id
+Stored per feed round.
 
-date
+FREE users:
+Can log trays.
 
-round_number
+PRO users:
+Get suggestions based on score.
 
-feed_quantity_set
+MODULE 6: FEED MIX INSTRUCTION ENGINE
 
-feed_quantity_actual
+Supervisor can define:
 
-tray_status
+Binder
 
-remarks
+Additives
 
-📊 Harvest Logs
+Growth promoter
 
-pond_id
+Gel
 
-harvest_weight
+Custom text
 
-partial / final
+Worker sees exact mix instructions.
 
-🧠 4️⃣ Intelligence Engine (MOST IMPORTANT)
+Execution only.
+No brand recommendation.
 
-This is your real product.
+MODULE 7: WATER TESTING MODULE
 
-It sits between:
+Weekly mandatory reminder.
 
-Raw Data → Decision Suggestion → Final Feed Set
-🔹 A. Blind Feeding Generator (0–30 DOC)
+Parameters
 
-When pond created:
+Salinity
 
-Auto-generate blind feed schedule
+DO
 
-Based on stocking_count
+pH
 
-Editable
+Temperature
 
-Stored as schedule table
+Ammonia
 
-🔹 B. Discipline Engine (Basic Plan)
+Alkalinity
 
-Runs daily:
+Stored per pond.
+
+FREE:
+Logging only.
+
+PRO:
+Water-based feed intelligence.
+
+MODULE 8: INTELLIGENCE ENGINE (PRO)
+
+Combines:
+
+Tray Score
+
+Water Quality
+
+Trend Stability
+
+Missed Feeding
+
+Historical Feed Pattern
+
+Decision Framework Example
+
+If:
+
+Tray score > 0.85
+AND water stable
+→ Suggest slight increase (3–5%)
+
+If:
+
+Tray score < 0.6
+OR ammonia high
+→ Suggest reduce
+
+If:
+
+Salinity swing > 3 ppt
+→ Conservative feed suggestion
+
+MODULE 9: FCR ENGINE (PRO)
 
 Inputs:
 
-DOC
+Total feed used
 
-Yesterday feed
+Harvest weight
 
-Tray signal
-
-Feed trend
+Survival estimate
 
 Outputs:
 
-Suggested increase/decrease %
+Current FCR
 
-Ideal range
+Trend FCR
 
-Overfeed warning
+Efficiency score
 
-Discipline score
+MODULE 10: DASHBOARD
 
-🔹 C. Efficiency Engine (Pro Plan)
+FREE:
 
-Activated after ~30 DOC or harvest data.
+Today feed plan
 
-Calculations:
+Pending tray checks
 
-Running FCR
+Feed history
 
-Feed efficiency score
+Water log history
 
-Growth estimation
+PRO:
 
-Abnormal feed spike detection
+Feed suggestions
 
-Pond comparison
+FCR widget
 
-🔐 5️⃣ Plan-Based Access Control
+Alerts
 
-Very important architecture rule:
+Stability score
 
-FREE
+Appetite trend
 
-Only logging
+7️⃣ TECHNICAL ARCHITECTURE
+Frontend
 
-No suggestions
+Flutter
 
-BASIC
+Architecture:
 
-Discipline engine visible
+Feature-based folder structure
 
-PRO
+Riverpod or Bloc for state management
 
-Full efficiency engine
+Offline-first storage (Hive or SQLite)
 
-Implementation:
+Sync engine
 
-Check plan_type at API/service level
+Backend
 
-Do NOT calculate heavy analytics for free users
+Supabase (Postgres + Auth + Storage)
 
-📡 6️⃣ Realtime Execution Control
+Tables:
 
-Feeding Round Flow:
+users
 
-Farmer opens pond
+farms
 
-Sees suggestion
+ponds
 
-Edits final quantity
+pond_config
 
-Saves
+blind_feed_schedule
 
-Worker device updates instantly
+feed_rounds
 
-Worker feeds exact quantity
+tray_logs
 
-Worker confirms execution
+feed_mix_instructions
 
-This prevents:
+water_tests
 
-Guess feeding
+subscriptions
 
-Worker deviation
+alerts
 
-Quantity mismatch
+Sync Logic
 
-💾 7️⃣ Data Strategy
-Online-First (Correct for You)
+Offline mode:
 
-Write directly to Supabase
+Local write
 
-Local caching only for:
+sync_pending flag
 
-Poor network
+Background retry
 
-Offline feeding entry
+Conflict rule:
 
-No heavy offline sync logic in MVP.
+Last write wins (for logging only)
 
-📊 8️⃣ Core Algorithms Layer (Internal)
+8️⃣ NON-FUNCTIONAL REQUIREMENTS
 
-You don’t need AI initially.
+App must work in low-network villages
 
-Use:
+Fast UI (max 2-second response)
 
-Rule-based logic
+Minimal data entry friction
 
-Moving averages
+Large buttons for field workers
 
-% change thresholds
+Multi-language support (future)
 
-Trend slope detection
+9️⃣ DATA INTELLIGENCE ROADMAP (PHASE 2+)
 
-Keep it explainable.
+Appetite stability score
 
-Farmers trust logic they understand.
+Early disease pattern detection
 
-🛡 9️⃣ Security Core
+Predictive FCR
 
-RLS enabled on all tables
+Cross-farm benchmarking (anonymous)
 
-User only sees own farms
+Partial harvest intelligence
 
-Workers restricted to assigned ponds
+🔟 SECURITY
 
-Supervisor access controlled
+Role-based access control
 
-⚡ 10️⃣ Scalability Philosophy
+Data isolation per farm
 
-Keep backend thin.
+Secure subscription validation
 
-All intelligence:
+No cross-pond data leaks
 
-Either in app service layer
+11️⃣ RISK ANALYSIS
 
-Or Supabase edge functions (later)
+Risk: Farmers ignore tray updates
+Mitigation: Make tray update mandatory to close round
 
-Do NOT build heavy microservices now.
+Risk: Wrong water data
+Mitigation: Range validation
 
-🧱 Final Technical Core Statement
+Risk: Over-reliance on suggestions
+Mitigation: Always show "Final decision is farmer's responsibility"
 
-AquaRythu is an online-first Flutter + Supabase system where feed logging is the base layer, and a rule-based intelligence engine sits on top to enforce discipline and optimize feed efficiency — controlled by plan-based access.
+12️⃣ CORE DIFFERENTIATION
+
+Most apps:
+
+Sell inputs
+
+Track expenses
+
+Provide IoT hardware
+
+AquaRythu:
+
+Enforces feeding discipline
+Uses tray-based execution
+Combines water + appetite signals
+Targets FCR improvement
+
+13️⃣ PRODUCT STATEMENT
+
+AquaRythu is a Feed & Water Discipline Intelligence System designed to improve shrimp farm FCR by enforcing best practices through structured tray execution and water-aware decision support.
