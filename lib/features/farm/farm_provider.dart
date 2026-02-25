@@ -23,15 +23,12 @@ class FarmProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addFarm(String userId, String name, {String? location, String? contact, String? phone}) async {
+  Future<void> addFarm(String userId, String name) async {
     final response = await Supabase.instance.client
         .from('farms')
         .insert({
           'user_id': userId,
           'name': name,
-          'location': location,
-          'contact': contact,
-          'phone': phone,
         })
         .select()
         .single();
@@ -50,9 +47,6 @@ class FarmProvider extends ChangeNotifier {
         .from('farms')
         .update({
           'name': farm.name,
-          'location': farm.location,
-          'contact': farm.contact,
-          'phone': farm.phone,
         })
         .eq('id', farm.id)
         .select()

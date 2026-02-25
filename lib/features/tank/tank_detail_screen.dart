@@ -34,9 +34,13 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
   }
 
   Future<void> _loadData() async {
-    await context.read<FeedProvider>().loadEntries(widget.tank.id);
-    await context.read<HarvestProvider>().loadHarvests(widget.tank.id);
-    await context.read<WaterQualityProvider>().loadEntries(widget.tank.id);
+    final feedProvider = context.read<FeedProvider>();
+    final harvestProvider = context.read<HarvestProvider>();
+    final waterQualityProvider = context.read<WaterQualityProvider>();
+
+    await feedProvider.loadEntries(widget.tank.id);
+    await harvestProvider.loadHarvests(widget.tank.id);
+    await waterQualityProvider.loadEntries(widget.tank.id);
   }
 
   Widget _buildFeedChart(List<FeedEntry> entries) {

@@ -103,8 +103,13 @@ class _WaterQualityLogScreenState extends State<WaterQualityLogScreen> {
   void _saveEntry() async {
     if (_formKey.currentState!.validate()) {
       final entry = WaterQualityEntry(id: '', tankId: widget.tankId, date: _selectedDate, ph: double.tryParse(_phController.text), ammonia: double.tryParse(_ammoniaController.text), nitrite: double.tryParse(_nitriteController.text), salinity: double.tryParse(_salinityController.text), temperature: double.tryParse(_tempController.text), dissolvedOxygen: double.tryParse(_doController.text), notes: _notesController.text);
-      await context.read<WaterQualityProvider>().addEntry(entry);
-      if (context.mounted) Navigator.pop(context);
+      
+      final waterQualityProvider = context.read<WaterQualityProvider>();
+      await waterQualityProvider.addEntry(entry);
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 }

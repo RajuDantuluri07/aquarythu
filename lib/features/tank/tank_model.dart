@@ -47,11 +47,11 @@ class Tank {
     id: json['id'],
     farmId: json['farm_id'],
     name: json['name'],
-    size: json['size']?.toDouble(),
+    size: (json['size'] ?? json['acre_size'])?.toDouble(), // Map acre_size
     stockingDate: DateTime.parse(json['stocking_date']),
-    initialSeed: json['initial_seed'],
-    plSize: json['pl_size'],
-    checkTrays: json['check_trays'] ?? 2,
+    initialSeed: json['initial_seed'] ?? json['stocking_count'], // Map stocking_count
+    plSize: json['pl_size']?.toString(), // pl_per_m2 is int in DB, plSize is String here
+    checkTrays: json['check_trays'] ?? json['number_of_trays'] ?? 2, // Map number_of_trays
     biomass: (json['biomass'] ?? 0).toDouble(),
     blindDuration: json['blind_duration'] ?? 30,
     blindWeek1: json['blind_week1'] ?? 2,

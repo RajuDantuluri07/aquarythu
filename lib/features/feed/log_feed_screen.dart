@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
-import '../../core/utils/date_utils.dart';
+
 import '../tank/tank_model.dart';
 import '../tank/tank_provider.dart';
 import 'feed_model.dart';
@@ -25,7 +25,7 @@ class _LogFeedScreenState extends State<LogFeedScreen> {
   final _amountController = TextEditingController();
   final _timeController = TextEditingController();
   String _trayResult = 'empty'; // Default to best case
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
   FeedMode _mode = FeedMode.blind;
   
   // State for supplements
@@ -554,9 +554,17 @@ class _LogFeedScreenState extends State<LogFeedScreen> {
         supplements: _selectedSupplements.isNotEmpty ? _selectedSupplements : null,
       );
       
-      await context.read<FeedProvider>().addEntry(entry);
-      if (context.mounted) Navigator.pop(context);
+      // Obtain the provider before the async gap.
+      final feedProvider = context.read<FeedProvider>();
+      await feedProvider.addEntry(entry);
+      
+      // Check if the widget is still mounted before using the context.
+      if (!mounted) return;
+      Navigator.pop(context);
+
     } else if (_selectedTankId == null) {
+      // Also check if mounted before showing a snackbar.
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a tank first')),
       );

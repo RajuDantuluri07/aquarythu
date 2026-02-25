@@ -17,12 +17,6 @@ class TankCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  Color get _statusColor {
-    if (tank.doc > 75) return AppColors.danger;
-    if (tank.doc > 50) return AppColors.warning;
-    return AppColors.success;
-  }
-
   String get _phaseLabel {
     if (tank.doc <= 3) return 'Phase 1 · Stocking';
     if (tank.doc <= 15) return 'Phase 2 · Stabilisation';

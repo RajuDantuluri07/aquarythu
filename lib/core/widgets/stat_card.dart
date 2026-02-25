@@ -54,7 +54,7 @@ class StatCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (onTap != null)
-                    Icon(Icons.chevron_right, color: AppColors.gray400, size: 18),
+                    const Icon(Icons.chevron_right, color: AppColors.gray400, size: 18),
                 ],
               ),
               const SizedBox(height: 12),
@@ -69,7 +69,7 @@ class StatCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppColors.gray600,

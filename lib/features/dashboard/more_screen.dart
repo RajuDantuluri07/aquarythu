@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
 import '../auth/auth_provider.dart';
+import '../farm/farm_setup_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -62,8 +63,9 @@ class MoreScreen extends StatelessWidget {
                     subtitle: 'Manage your farms',
                     color: AppColors.success,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Farms page coming soon...')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FarmSetupScreen()),
                       );
                     },
                   ),
@@ -106,7 +108,7 @@ class MoreScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () async {
+                      onPressed: () {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
@@ -118,9 +120,14 @@ class MoreScreen extends StatelessWidget {
                                 child: const Text('Cancel'),
                               ),
                               ElevatedButton(
-                                onPressed: () async {
-                                  await context.read<AuthNotifier>().signOut();
-                                  if (context.mounted) Navigator.pop(context);
+                                onPressed: () {
+                                  // It's better practice to dismiss the dialog first,
+                                  // then trigger the action. This avoids using BuildContext
+                                  // across async gaps and delegates navigation responsibility
+                                  // to the AuthNotifier.
+                                  final authNotifier = context.read<AuthNotifier>();
+                                  Navigator.pop(context);
+                                  authNotifier.signOut();
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.danger,

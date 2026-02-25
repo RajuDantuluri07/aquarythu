@@ -634,9 +634,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAddFarmDialog(BuildContext context) {
     final nameController = TextEditingController();
-    final locationController = TextEditingController();
-    final contactController = TextEditingController();
-    final phoneController = TextEditingController();
 
     showDialog(
       context: context,
@@ -651,30 +648,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Farm Name',
                   hintText: 'e.g., Shree Shrimp Farm',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location',
-                  hintText: 'e.g., Nellore, Andhra Pradesh',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: contactController,
-                decoration: const InputDecoration(
-                  labelText: 'Contact Person',
-                  hintText: 'Farm Manager Name',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: '+91 XXXXX XXXXX',
                 ),
               ),
             ],
@@ -692,9 +665,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 await context.read<FarmProvider>().addFarm(
                   auth.user!.id,
                   nameController.text,
-                  location: locationController.text,
-                  contact: contactController.text,
-                  phone: phoneController.text,
                 );
                 if (context.mounted) Navigator.pop(context);
               }

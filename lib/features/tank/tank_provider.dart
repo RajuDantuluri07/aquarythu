@@ -10,7 +10,7 @@ class TankProvider extends ChangeNotifier {
 
   Future<void> loadTanks(String farmId) async {
     final response = await Supabase.instance.client
-        .from('tanks')
+        .from('ponds') // Changed from 'tanks' to 'ponds'
         .select()
         .eq('farm_id', farmId);
     _tanks = (response as List).map((e) => Tank.fromJson(e)).toList();
