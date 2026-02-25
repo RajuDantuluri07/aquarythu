@@ -43,6 +43,48 @@ class Tank {
     this.deadCount = 0,
   });
   
+  Tank copyWith({
+    String? id,
+    String? farmId,
+    String? name,
+    double? size,
+    DateTime? stockingDate,
+    int? initialSeed,
+    String? plSize,
+    int? checkTrays,
+    double? biomass,
+    int? blindDuration,
+    int? blindWeek1,
+    int? blindStd,
+    List<dynamic>? blindSchedule,
+    bool? hasTransitionedFromBlind,
+    String? status,
+    String? healthStatus,
+    String? healthNotes,
+    int? deadCount,
+  }) {
+    return Tank(
+      id: id ?? this.id,
+      farmId: farmId ?? this.farmId,
+      name: name ?? this.name,
+      size: size ?? this.size,
+      stockingDate: stockingDate ?? this.stockingDate,
+      initialSeed: initialSeed ?? this.initialSeed,
+      plSize: plSize ?? this.plSize,
+      checkTrays: checkTrays ?? this.checkTrays,
+      biomass: biomass ?? this.biomass,
+      blindDuration: blindDuration ?? this.blindDuration,
+      blindWeek1: blindWeek1 ?? this.blindWeek1,
+      blindStd: blindStd ?? this.blindStd,
+      blindSchedule: blindSchedule ?? this.blindSchedule,
+      hasTransitionedFromBlind: hasTransitionedFromBlind ?? this.hasTransitionedFromBlind,
+      status: status ?? this.status,
+      healthStatus: healthStatus ?? this.healthStatus,
+      healthNotes: healthNotes ?? this.healthNotes,
+      deadCount: deadCount ?? this.deadCount,
+    );
+  }
+
   factory Tank.fromJson(Map<String, dynamic> json) => Tank(
     id: json['id'],
     farmId: json['farm_id'],
@@ -63,4 +105,27 @@ class Tank {
     healthNotes: json['health_notes'],
     deadCount: json['dead_count'] ?? 0,
   );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'farm_id': farmId,
+      'name': name,
+      'size': size,
+      'stocking_date': stockingDate.toIso8601String(),
+      'initial_seed': initialSeed,
+      'pl_size': plSize,
+      'check_trays': checkTrays,
+      'biomass': biomass,
+      'blind_duration': blindDuration,
+      'blind_week1': blindWeek1,
+      'blind_std': blindStd,
+      'blind_schedule': blindSchedule,
+      'has_transitioned': hasTransitionedFromBlind,
+      'status': status,
+      'health_status': healthStatus,
+      'health_notes': healthNotes,
+      'dead_count': deadCount,
+    };
+  }
 }

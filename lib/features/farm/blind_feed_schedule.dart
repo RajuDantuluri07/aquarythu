@@ -6,14 +6,14 @@ import 'package:flutter/foundation.dart';
 @immutable
 class BlindFeedSchedule {
   final String id;
-  final String pondId;
+  final String tankId;
   final int dayOfCulture;
   final double dailyFeedAmount;
   final String feedType;
 
   const BlindFeedSchedule({
     required this.id,
-    required this.pondId,
+    required this.tankId,
     required this.dayOfCulture,
     required this.dailyFeedAmount,
     required this.feedType,
@@ -21,14 +21,14 @@ class BlindFeedSchedule {
 
   BlindFeedSchedule copyWith({
     String? id,
-    String? pondId,
+    String? tankId,
     int? dayOfCulture,
     double? dailyFeedAmount,
     String? feedType,
   }) {
     return BlindFeedSchedule(
       id: id ?? this.id,
-      pondId: pondId ?? this.pondId,
+      tankId: tankId ?? this.tankId,
       dayOfCulture: dayOfCulture ?? this.dayOfCulture,
       dailyFeedAmount: dailyFeedAmount ?? this.dailyFeedAmount,
       feedType: feedType ?? this.feedType,
@@ -38,7 +38,7 @@ class BlindFeedSchedule {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'pond_id': pondId,
+      'tank_id': tankId,
       'day_of_culture': dayOfCulture,
       'daily_feed_amount': dailyFeedAmount,
       'feed_type': feedType,
@@ -48,7 +48,7 @@ class BlindFeedSchedule {
   factory BlindFeedSchedule.fromMap(Map<String, dynamic> map) {
     return BlindFeedSchedule(
       id: map['id'] ?? '',
-      pondId: map['pond_id'] ?? '',
+      tankId: map['tank_id'] ?? '',
       dayOfCulture: map['day_of_culture']?.toInt() ?? 0,
       dailyFeedAmount: map['daily_feed_amount']?.toDouble() ?? 0.0,
       feedType: map['feed_type'] ?? '',
@@ -61,7 +61,7 @@ class BlindFeedSchedule {
 
   @override
   String toString() {
-    return 'BlindFeedSchedule(id: $id, pondId: $pondId, dayOfCulture: $dayOfCulture, dailyFeedAmount: $dailyFeedAmount, feedType: $feedType)';
+    return 'BlindFeedSchedule(id: $id, tankId: $tankId, dayOfCulture: $dayOfCulture, dailyFeedAmount: $dailyFeedAmount, feedType: $feedType)';
   }
 
   @override
@@ -70,7 +70,7 @@ class BlindFeedSchedule {
 
     return other is BlindFeedSchedule &&
         other.id == id &&
-        other.pondId == pondId &&
+        other.tankId == tankId &&
         other.dayOfCulture == dayOfCulture &&
         other.dailyFeedAmount == dailyFeedAmount &&
         other.feedType == feedType;
@@ -79,7 +79,7 @@ class BlindFeedSchedule {
   @override
   int get hashCode {
     return id.hashCode ^
-        pondId.hashCode ^
+        tankId.hashCode ^
         dayOfCulture.hashCode ^
         dailyFeedAmount.hashCode ^
         feedType.hashCode;

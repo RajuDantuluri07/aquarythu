@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../dashboard/farm.dart';
-import '../dashboard/pond.dart';
-import 'blind_feed_schedule.dart';
+import '../tank/tank_model.dart';
+import 'blind_feed_schedule.dart'; // Assumes this model is updated or compatible
 import 'farm_repository.dart';
 
 class FarmSetupNotifier extends ChangeNotifier {
   String _farmName = '';
   String get farmName => _farmName;
 
-  final List<Pond> _ponds = [];
-  List<Pond> get ponds => List.unmodifiable(_ponds);
+  final List<Tank> _tanks = [];
+  List<Tank> get tanks => List.unmodifiable(_tanks);
 
   final _uuid = const Uuid();
   final FarmRepository _repository;
 
   FarmSetupNotifier({FarmRepository? repository})
       : _repository = repository ?? FarmRepository() {
-    // Start with one empty pond form
-    addPond();
+    // Start with one empty tank form
+    addTank();
   }
 
   void updateFarmName(String name) {
@@ -27,34 +27,31 @@ class FarmSetupNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addPond() {
-    _ponds.add(
-      Pond(
+  void addTank() {
+    _tanks.add(
+      Tank(
         id: _uuid.v4(), // Temporary client-side ID
         farmId: '', // Will be assigned on save
         name: '',
-        acreSize: 0.0,
-        stockingCount: 0,
-        plPerM2: 0,
         stockingDate: DateTime.now(),
-        numberOfTrays: 0,
-        aerationHp: 0.0,
-        waterSource: '',
+        size: 0.0,
+        initialSeed: 0,
+        plSize: '',
       ),
     );
     notifyListeners();
   }
 
-  void updatePond(int index, Pond pond) {
-    if (index >= 0 && index < _ponds.length) {
-      _ponds[index] = pond;
+  void updateTank(int index, Tank tank) {
+    if (index >= 0 && index < _tanks.length) {
+      _tanks[index] = tank;
       notifyListeners();
     }
   }
 
-  void removePond(int index) {
-    if (index >= 0 && index < _ponds.length) {
-      _ponds.removeAt(index);
+  void removeTank(int index) {
+    if (index >= 0 && index < _tanks.length) {
+      _tanks.removeAt(index);
       notifyListeners();
     }
   }
@@ -64,17 +61,17 @@ class FarmSetupNotifier extends ChangeNotifier {
       throw Exception('Farm name cannot be empty');
     }
 
-    if (_ponds.isEmpty) {
-      throw Exception('At least one pond is required');
+    if (_tanks.isEmpty) {
+      throw Exception('At least one tank is required');
     }
 
-    for (var i = 0; i < _ponds.length; i++) {
-      final pond = _ponds[i];
-      if (pond.name.trim().isEmpty) {
-        throw Exception('Pond ${i + 1} name cannot be empty');
+    for (var i = 0; i < _tanks.length; i++) {
+      final tank = _tanks[i];
+      if (tank.name.trim().isEmpty) {
+        throw Exception('Tank ${i + 1} name cannot be empty');
       }
-      if (pond.acreSize <= 0) {
-        throw Exception('Pond ${i + 1} acre size must be greater than 0');
+      if ((tank.size ?? 0) <= 0) {
+        throw Exception('Tank ${i + 1} area must be greater than 0');
       }
     }
 
@@ -86,20 +83,40 @@ class FarmSetupNotifier extends ChangeNotifier {
       name: _farmName,
     );
 
-    // Assign the generated farmId to all ponds
-    final pondsToSave = _ponds.map((pond) {
-      return pond.copyWith(farmId: farmId);
+    // Assign the generated farmId to all tanks
+    final tanksToSave = _tanks.map((tank) {
+      // Manually creating a new Tank as copyWith is not guaranteed on the model
+      return Tank(
+        id: tank.id,
+        farmId: farmId,
+        name: tank.name,
+        size: tank.size,
+        stockingDate: tank.stockingDate,
+        initialSeed: tank.initialSeed,
+        plSize: tank.plSize,
+        checkTrays: tank.checkTrays,
+        biomass: tank.biomass,
+        blindDuration: tank.blindDuration,
+        blindWeek1: tank.blindWeek1,
+        blindStd: tank.blindStd,
+        blindSchedule: tank.blindSchedule,
+        hasTransitionedFromBlind: tank.hasTransitionedFromBlind,
+        status: tank.status,
+        healthStatus: tank.healthStatus,
+        healthNotes: tank.healthNotes,
+        deadCount: tank.deadCount,
+      );
     }).toList();
 
     // Generate Blind Feed Schedules for DOC 1-30
     final List<BlindFeedSchedule> allSchedules = [];
-    for (final pond in pondsToSave) {
-      allSchedules.addAll(_generateBlindFeedSchedule(pond));
+    for (final tank in tanksToSave) {
+      allSchedules.addAll(_generateBlindFeedSchedule(tank));
     }
 
     try {
       await _repository.createFarm(farm);
-      await _repository.createPonds(pondsToSave);
+      await _repository.createTanks(tanksToSave);
       await _repository.createBlindFeedSchedules(allSchedules);
     } catch (e) {
       debugPrint('Error saving farm: $e');
@@ -107,7 +124,7 @@ class FarmSetupNotifier extends ChangeNotifier {
     }
   }
 
-  List<BlindFeedSchedule> _generateBlindFeedSchedule(Pond pond) {
+  List<BlindFeedSchedule> _generateBlindFeedSchedule(Tank tank) {
     final List<BlindFeedSchedule> schedules = [];
     // Logic based on PRD Module 2:
     // "System auto-generates: Blind feeding schedule (DOC 1–30) Based on: Stocking count, Acre size, Standard feed table"
@@ -116,7 +133,7 @@ class FarmSetupNotifier extends ChangeNotifier {
     // Base assumption: 100,000 PL requires ~2.0kg start, increasing daily.
     // Formula: (Stocking Count / 100,000) * (Base + (DOC * Increment))
 
-    final double stockingRatio = pond.stockingCount / 100000.0;
+    final double stockingRatio = (tank.initialSeed ?? 0) / 100000.0;
 
     for (int doc = 1; doc <= 30; doc++) {
       // Example progression:
@@ -129,7 +146,7 @@ class FarmSetupNotifier extends ChangeNotifier {
 
       schedules.add(BlindFeedSchedule(
         id: _uuid.v4(),
-        pondId: pond.id,
+        tankId: tank.id,
         dayOfCulture: doc,
         dailyFeedAmount: double.parse(dailyAmount.toStringAsFixed(2)),
         feedType: feedType,

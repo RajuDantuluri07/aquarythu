@@ -149,7 +149,7 @@ class MoreScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'AquaRythu v1.0.0',
                     style: TextStyle(color: AppColors.gray600, fontSize: 12),
                   ),
@@ -208,7 +208,7 @@ class MoreScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.gray600,
                       ),
@@ -216,7 +216,7 @@ class MoreScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: AppColors.gray400),
+              const Icon(Icons.chevron_right, color: AppColors.gray400),
             ],
           ),
         ),
@@ -229,35 +229,35 @@ class MoreScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Pricing Plans'),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'FREE PLAN',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              const Text('✓ Unlimited feed logging'),
-              const Text('✓ Unlimited ponds'),
-              const Text('✓ Blind feeding auto schedule'),
-              const Text('✓ Tray logging (per tray mandatory)'),
-              const Text('✓ Water test logging'),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 8),
+              Text('✓ Unlimited feed logging'),
+              Text('✓ Unlimited tanks'),
+              Text('✓ Blind feeding auto schedule'),
+              Text('✓ Tray logging (per tray mandatory)'),
+              Text('✓ Water test logging'),
+              SizedBox(height: 16),
+              Text(
                 'PRO PLAN (₹499/month)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
               ),
-              const SizedBox(height: 8),
-              const Text('✓ All Free Plan features'),
-              const Text('✓ Feed increase/decrease suggestions'),
-              const Text('✓ Overfeeding alerts'),
-              const Text('✓ Feed discipline score'),
-              const Text('✓ FCR calculation'),
-              const Text('✓ Appetite trend graph'),
-              const Text('✓ Water-based feeding intelligence'),
-              const Text('✓ Reports and analytics'),
+              SizedBox(height: 8),
+              Text('✓ All Free Plan features'),
+              Text('✓ Feed increase/decrease suggestions'),
+              Text('✓ Overfeeding alerts'),
+              Text('✓ Feed discipline score'),
+              Text('✓ FCR calculation'),
+              Text('✓ Appetite trend graph'),
+              Text('✓ Water-based feeding intelligence'),
+              Text('✓ Reports and analytics'),
             ],
           ),
         ),
@@ -276,25 +276,25 @@ class MoreScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Privacy Policy'),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'AquaRythu Privacy Policy',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 'We respect your privacy and are committed to protecting your personal data. '
                 'We collect information necessary to provide feed management and water quality insights. '
                 'Your data is encrypted and stored securely on Supabase servers. '
                 'We will never sell your data to third parties.',
                 textAlign: TextAlign.justify,
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 '• Data is encrypted in transit and at rest\n'
                 '• Only you can access your farm data\n'
                 '• You can request data deletion anytime\n'
@@ -319,36 +319,36 @@ class MoreScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Terms & Conditions'),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'AquaRythu Terms & Conditions',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 '1. Service Description\n'
                 'AquaRythu provides feed management and water quality insights for shrimp farming.',
                 textAlign: TextAlign.justify,
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 '2. User Responsibilities\n'
                 'You are responsible for maintaining the confidentiality of your account credentials.',
                 textAlign: TextAlign.justify,
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 '3. Disclaimer\n'
                 'AquaRythu does not guarantee profits or specific outcomes. '
                 'The app provides insights to help with decision-making.',
                 textAlign: TextAlign.justify,
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 '4. Limitation of Liability\n'
                 'AquaRythu is provided "as is". We are not liable for any damages resulting from app usage.',
                 textAlign: TextAlign.justify,

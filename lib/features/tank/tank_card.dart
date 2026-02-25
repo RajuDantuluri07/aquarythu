@@ -60,7 +60,7 @@ class TankCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: AppColors.gray200),
                   ),
@@ -74,7 +74,7 @@ class TankCard extends StatelessWidget {
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.water_drop, color: AppColors.primary, size: 20),
+                      child: const Icon(Icons.water_drop, color: AppColors.primary, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -117,7 +117,7 @@ class TankCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             'DOC ${tank.doc}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.gray600,
                             ),
@@ -126,7 +126,7 @@ class TankCard extends StatelessWidget {
                       ),
                     ),
                     PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: AppColors.gray600),
+                      icon: const Icon(Icons.more_vert, color: AppColors.gray600),
                       onSelected: (value) {
                         if (value == 'edit') onEdit();
                         if (value == 'delete') onDelete();
@@ -188,7 +188,7 @@ class TankCard extends StatelessWidget {
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         border: Border(
                           top: BorderSide(color: AppColors.gray200),
                         ),
@@ -198,11 +198,11 @@ class TankCard extends StatelessWidget {
                           Expanded(
                             child: Row(
                               children: [
-                                Icon(Icons.scale, size: 14, color: AppColors.gray500),
+                                const Icon(Icons.scale, size: 14, color: AppColors.gray500),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Biomass: ${tank.biomass.toStringAsFixed(0)} kg',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: AppColors.gray700,
                                   ),
@@ -210,11 +210,11 @@ class TankCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Expanded(
+                          const Expanded(
                             child: Row(
                               children: [
                                 Icon(Icons.trending_up, size: 14, color: AppColors.primary),
-                                const SizedBox(width: 4),
+                                SizedBox(width: 4),
                                 Text(
                                   'FCR: 1.2',
                                   style: TextStyle(
@@ -271,7 +271,7 @@ class TankCard extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 10,
             color: AppColors.gray500,
           ),
@@ -299,7 +299,7 @@ class TankCard extends StatelessWidget {
           ),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 10,
               color: AppColors.gray500,
             ),

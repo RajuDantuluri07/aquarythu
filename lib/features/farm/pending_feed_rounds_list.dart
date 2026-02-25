@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/theme.dart';
-import '../../farm/farm_repository.dart';
-import '../../farm/feed_round.dart';
-import '../../feeding/tray_logging_screen.dart';
-import '../pond.dart';
+import 'farm_repository.dart';
+import 'feed_round.dart';
+import '../feeding/tray_logging_screen.dart';
+import '../tank/tank_model.dart';
 
 class PendingFeedRoundsList extends StatefulWidget {
   const PendingFeedRoundsList({super.key});
@@ -16,7 +16,7 @@ class PendingFeedRoundsList extends StatefulWidget {
 
 class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
   final _repository = FarmRepository();
-  late Future<List<({FeedRound round, Pond pond})>> _pendingRoundsFuture;
+  late Future<List<({FeedLog round, Tank tank})>> _pendingRoundsFuture;
 
   @override
   void initState() {
@@ -26,7 +26,7 @@ class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
 
   void _refresh() {
     setState(() {
-      _pendingRoundsFuture = _repository.getPendingFeedRounds();
+      _pendingRoundsFuture = _repository.getPendingFeedLogs();
     });
   }
 
@@ -54,7 +54,7 @@ class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
             ],
           ),
         ),
-        FutureBuilder<List<({FeedRound round, Pond pond})>>(
+        FutureBuilder<List<({FeedLog round, Tank tank})>>(
           future: _pendingRoundsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -81,7 +81,7 @@ class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
               itemCount: rounds.length,
               itemBuilder: (context, index) {
                 final item = rounds[index];
-                return _buildFeedRoundCard(context, item.round, item.pond);
+                return _buildFeedRoundCard(context, item.round, item.tank);
               },
             );
           },
@@ -90,7 +90,7 @@ class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
     );
   }
 
-  Widget _buildFeedRoundCard(BuildContext context, FeedRound round, Pond pond) {
+  Widget _buildFeedRoundCard(BuildContext context, FeedLog round, Tank tank) {
     final timeFormat = DateFormat.jm();
 
     return Card(
@@ -104,7 +104,7 @@ class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
           child: const Icon(Icons.access_time, color: AppColors.warning),
         ),
         title: Text(
-          pond.name,
+          tank.name,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         subtitle: Column(
@@ -121,8 +121,8 @@ class _PendingFeedRoundsListState extends State<PendingFeedRoundsList> {
               context,
               MaterialPageRoute(
                 builder: (context) => TrayLoggingScreen(
-                  pond: pond,
-                  feedRoundId: round.id,
+                  tank: tank,
+                  feedLogId: round.id,
                 ),
               ),
             );

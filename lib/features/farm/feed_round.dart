@@ -5,9 +5,9 @@ import 'package:flutter/foundation.dart';
 /// Represents a single feeding round execution.
 /// Covers both Blind Feeding (Module 3) and Tray Feeding (Module 5) events.
 @immutable
-class FeedRound {
+class FeedLog {
   final String id;
-  final String pondId;
+  final String tankId;
   final DateTime scheduledAt;
   final DateTime? executedAt; // Timestamp when worker marks complete
   final double feedQuantity; // Final quantity (edited by supervisor)
@@ -16,9 +16,9 @@ class FeedRound {
   final String? executedBy; // User ID of the worker
   final bool isCompleted;
 
-  const FeedRound({
+  const FeedLog({
     required this.id,
-    required this.pondId,
+    required this.tankId,
     required this.scheduledAt,
     this.executedAt,
     required this.feedQuantity,
@@ -28,9 +28,9 @@ class FeedRound {
     this.isCompleted = false,
   });
 
-  FeedRound copyWith({
+  FeedLog copyWith({
     String? id,
-    String? pondId,
+    String? tankId,
     DateTime? scheduledAt,
     DateTime? executedAt,
     double? feedQuantity,
@@ -39,9 +39,9 @@ class FeedRound {
     String? executedBy,
     bool? isCompleted,
   }) {
-    return FeedRound(
+    return FeedLog(
       id: id ?? this.id,
-      pondId: pondId ?? this.pondId,
+      tankId: tankId ?? this.tankId,
       scheduledAt: scheduledAt ?? this.scheduledAt,
       executedAt: executedAt ?? this.executedAt,
       feedQuantity: feedQuantity ?? this.feedQuantity,
@@ -55,7 +55,7 @@ class FeedRound {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'pond_id': pondId,
+      'tank_id': tankId,
       'scheduled_at': scheduledAt.toIso8601String(),
       'executed_at': executedAt?.toIso8601String(),
       'feed_quantity': feedQuantity,
@@ -66,10 +66,10 @@ class FeedRound {
     };
   }
 
-  factory FeedRound.fromMap(Map<String, dynamic> map) {
-    return FeedRound(
+  factory FeedLog.fromMap(Map<String, dynamic> map) {
+    return FeedLog(
       id: map['id'] ?? '',
-      pondId: map['pond_id'] ?? '',
+      tankId: map['tank_id'] ?? '',
       scheduledAt: DateTime.parse(map['scheduled_at']),
       executedAt: map['executed_at'] != null ? DateTime.parse(map['executed_at']) : null,
       feedQuantity: map['feed_quantity']?.toDouble() ?? 0.0,
@@ -82,20 +82,20 @@ class FeedRound {
 
   String toJson() => json.encode(toMap());
 
-  factory FeedRound.fromJson(String source) => FeedRound.fromMap(json.decode(source));
+  factory FeedLog.fromJson(String source) => FeedLog.fromMap(json.decode(source));
 
   @override
   String toString() {
-    return 'FeedRound(id: $id, pondId: $pondId, scheduledAt: $scheduledAt, executedAt: $executedAt, feedQuantity: $feedQuantity, feedType: $feedType, mixInstructions: $mixInstructions, executedBy: $executedBy, isCompleted: $isCompleted)';
+    return 'FeedLog(id: $id, tankId: $tankId, scheduledAt: $scheduledAt, executedAt: $executedAt, feedQuantity: $feedQuantity, feedType: $feedType, mixInstructions: $mixInstructions, executedBy: $executedBy, isCompleted: $isCompleted)';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is FeedRound &&
+    return other is FeedLog &&
         other.id == id &&
-        other.pondId == pondId &&
+        other.tankId == tankId &&
         other.scheduledAt == scheduledAt &&
         other.executedAt == executedAt &&
         other.feedQuantity == feedQuantity &&
@@ -108,7 +108,7 @@ class FeedRound {
   @override
   int get hashCode {
     return id.hashCode ^
-        pondId.hashCode ^
+        tankId.hashCode ^
         scheduledAt.hashCode ^
         executedAt.hashCode ^
         feedQuantity.hashCode ^

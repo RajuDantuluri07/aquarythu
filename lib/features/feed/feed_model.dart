@@ -1,41 +1,31 @@
+import 'package:flutter/foundation.dart';
+
+@immutable
 class FeedEntry {
   final String id;
   final String tankId;
-  final DateTime date;
-  final double amount;
-  final String? time;
-  final String? trayResult;
-  final List<String>? supplements;
-  final String? reason;
-  final bool healthObserved;
-  final int mortality;
-  final String? disease;
-  
-  FeedEntry({
+  final DateTime date; // executed_at
+  final double amount; // feed_quantity
+  final String feedType;
+  final String mixInstructions;
+
+  const FeedEntry({
     required this.id,
     required this.tankId,
     required this.date,
     required this.amount,
-    this.time,
-    this.trayResult,
-    this.supplements,
-    this.reason,
-    this.healthObserved = false,
-    this.mortality = 0,
-    this.disease,
+    required this.feedType,
+    this.mixInstructions = '',
   });
-  
-  factory FeedEntry.fromJson(Map<String, dynamic> json) => FeedEntry(
-    id: json['id'],
-    tankId: json['tank_id'],
-    date: DateTime.parse(json['date']),
-    amount: json['amount'].toDouble(),
-    time: json['time'],
-    trayResult: json['tray_result'],
-    supplements: json['supplements'] != null ? List<String>.from(json['supplements']) : null,
-    reason: json['reason'],
-    healthObserved: json['health_observed'] ?? false,
-    mortality: json['mortality'] ?? 0,
-    disease: json['disease'],
-  );
+
+  factory FeedEntry.fromJson(Map<String, dynamic> json) {
+    return FeedEntry(
+      id: json['id'],
+      tankId: json['tank_id'],
+      date: DateTime.parse(json['executed_at'] ?? json['scheduled_at']),
+      amount: (json['feed_quantity'] as num).toDouble(),
+      feedType: json['feed_type'],
+      mixInstructions: json['mix_instructions'] ?? '',
+    );
+  }
 }

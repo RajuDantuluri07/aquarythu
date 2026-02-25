@@ -7,14 +7,21 @@ import 'tank_model.dart';
 class TankProvider extends ChangeNotifier {
   List<Tank> _tanks = [];
   List<Tank> get tanks => _tanks;
+  bool _isLoading = false;
 
   Future<void> loadTanks(String farmId) async {
-    final response = await Supabase.instance.client
-        .from('ponds') // Changed from 'tanks' to 'ponds'
-        .select()
-        .eq('farm_id', farmId);
-    _tanks = (response as List).map((e) => Tank.fromJson(e)).toList();
-    notifyListeners();
+    if (_isLoading) return;
+    _isLoading = true;
+    try {
+      final response = await Supabase.instance.client
+          .from('tanks')
+          .select()
+          .eq('farm_id', farmId);
+      _tanks = (response as List).map((e) => Tank.fromJson(e)).toList();
+      notifyListeners();
+    } finally {
+      _isLoading = false;
+    }
   }
 
   Future<void> addTank(Tank tank) async {

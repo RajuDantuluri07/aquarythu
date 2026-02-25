@@ -51,9 +51,12 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
       );
     }
 
+    // Sort entries by date to ensure chart renders correctly
+    final sortedEntries = List<FeedEntry>.from(entries)..sort((a, b) => a.date.compareTo(b.date));
+
     // Group entries by date and sum amounts
     final Map<String, double> dailyAmounts = {};
-    for (var entry in entries) {
+    for (var entry in sortedEntries) {
       final dateKey = AppDateUtils.getShortDate(entry.date);
       dailyAmounts[dateKey] = (dailyAmounts[dateKey] ?? 0) + entry.amount;
     }
@@ -75,13 +78,13 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
           horizontalInterval: (maxYValue / 5).ceilToDouble(),
           verticalInterval: 1,
           getDrawingHorizontalLine: (value) {
-            return FlLine(
+            return const FlLine(
               color: AppColors.gray200,
               strokeWidth: 1,
             );
           },
           getDrawingVerticalLine: (value) {
-            return FlLine(
+            return const FlLine(
               color: AppColors.gray200,
               strokeWidth: 1,
             );
@@ -107,7 +110,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       dailyAmounts.keys.elementAt(index),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.gray600,
                         fontSize: 11,
                       ),
@@ -128,7 +131,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     '${value.toInt()}kg',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.gray600,
                       fontSize: 11,
                     ),
@@ -190,7 +193,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             elevation: 0,
-            bottom: TabBar(
+            bottom: const TabBar(
               tabs: [
                 Tab(text: 'Overview'),
                 Tab(text: 'Logs'),
@@ -239,7 +242,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
                 icon: Icons.scale,
                 color: AppColors.primary,
               ),
-              StatCard(
+              const StatCard(
                 label: 'FCR',
                 value: '1.20',
                 icon: Icons.trending_up,

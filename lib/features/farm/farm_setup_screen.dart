@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/theme.dart';
 import '../auth/auth_provider.dart';
 import 'farm_setup_provider.dart';
-import 'widgets/pond_form_card.dart';
+import 'tank_form_card.dart';
 
 class FarmSetupScreen extends StatelessWidget {
   const FarmSetupScreen({super.key});
@@ -40,23 +40,23 @@ class FarmSetupScreen extends StatelessWidget {
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: notifier.ponds.length,
+                    itemCount: notifier.tanks.length,
                     itemBuilder: (context, index) {
-                      final pond = notifier.ponds[index];
-                      return PondFormCard(
-                        key: ValueKey(pond.id), // Use temporary ID as key
-                        pondIndex: index,
-                        pond: pond,
-                        onChanged: (updatedPond) => notifier.updatePond(index, updatedPond),
-                        onRemove: () => notifier.removePond(index),
+                      final tank = notifier.tanks[index];
+                      return TankFormCard(
+                        key: ValueKey(tank.id), // Use temporary ID as key
+                        tankIndex: index,
+                        tank: tank,
+                        onChanged: (updatedTank) => notifier.updateTank(index, updatedTank),
+                        onRemove: () => notifier.removeTank(index),
                       );
                     },
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    onPressed: notifier.addPond,
+                    onPressed: notifier.addTank,
                     icon: const Icon(Icons.add),
-                    label: const Text('Add Another Pond'),
+                    label: const Text('Add Another Tank'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -97,7 +97,7 @@ class FarmSetupScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    child: const Text('Save Farm & Ponds'),
+                    child: const Text('Save Farm & Tanks'),
                   ),
                 ],
               ),

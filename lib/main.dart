@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
         title: 'AquaRythu',
         theme: ThemeData(
           primaryColor: AppColors.primary,
-          colorScheme: ColorScheme.light(
+          colorScheme: const ColorScheme.light(
             primary: AppColors.primary,
             secondary: AppColors.success,
           ),

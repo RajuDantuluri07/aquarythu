@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
 import '../feed/log_feed_screen.dart';
 import 'analytics_screen.dart';
+import '../tank/tank_provider.dart';
 import 'home_screen.dart';
 import 'more_screen.dart';
 
@@ -35,11 +37,34 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) => setState(() => _pageIndex = index),
-        children: const [
-          HomeScreen(),
-          LogFeedScreen(),
-          AnalyticsScreen(),
-          MoreScreen(),
+        children: [
+          const HomeScreen(),
+          Consumer<TankProvider>(
+            builder: (context, tankProvider, _) {
+              if (tankProvider.tanks.isEmpty) {
+                return Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Log Feed'),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  body: const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Text(
+                        'Please add a tank on the dashboard before logging feed.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.gray600, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return LogFeedScreen(tankId: tankProvider.tanks.first.id);
+            },
+          ),
+          const AnalyticsScreen(),
+          const MoreScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

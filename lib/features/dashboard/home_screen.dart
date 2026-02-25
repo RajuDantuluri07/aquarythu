@@ -12,6 +12,9 @@ import '../auth/auth_provider.dart';
 import '../farm/farm_provider.dart';
 import '../tank/tank_provider.dart';
 import '../tank/tank_detail_screen.dart';
+import '../tank/tank_dialog.dart';
+import '../farm/add_farm_dialog.dart';
+import '../farm/edit_farm_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -64,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: AppColors.primary,
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -91,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.agriculture, color: Colors.white, size: 18),
+                                const Icon(Icons.agriculture, color: Colors.white, size: 18),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -154,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.primary, width: 3),
                         ),
-                        child: Icon(Icons.agriculture, size: 40, color: AppColors.primary),
+                        child: const Icon(Icons.agriculture, size: 40, color: AppColors.primary),
                       ),
                       const SizedBox(height: 16),
                       const Text(
@@ -177,10 +180,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: AppColors.warningLight,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Row(
+                        child: const Row(
                           children: [
                             Icon(Icons.warning, color: AppColors.warningDark, size: 20),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Important: All data is stored locally on this device only. Please use the backup feature regularly.',
@@ -238,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: AppColors.primaryLight,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(Icons.agriculture, color: AppColors.primary),
+                            child: const Icon(Icons.agriculture, color: AppColors.primary),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -254,17 +257,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 Text(
                                   '${tankProvider.tanks.length} Tanks',
-                                  style: TextStyle(color: AppColors.gray600),
+                                  style: const TextStyle(color: AppColors.gray600),
                                 ),
                               ],
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.settings, color: AppColors.gray600),
+                            icon: const Icon(Icons.settings, color: AppColors.gray600),
                             onPressed: () {},
                           ),
                           IconButton(
-                            icon: Icon(Icons.edit, color: AppColors.gray600),
+                            icon: const Icon(Icons.edit, color: AppColors.gray600),
                             onPressed: () {},
                           ),
                         ],
@@ -278,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.pie_chart,
                       trailing: TextButton.icon(
                         onPressed: () {},
-                        icon: Icon(Icons.compare_arrows, size: 18),
+                        icon: const Icon(Icons.compare_arrows, size: 18),
                         label: const Text('Compare'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.primary,
@@ -299,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(
+                            const Expanded(
                               child: StatCard(
                                 label: 'Feed Consumed',
                                 value: '0 kg',
@@ -308,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(
+                            const Expanded(
                               child: StatCard(
                                 label: 'Avg FCR',
                                 value: '0.00',
@@ -330,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(
+                            const Expanded(
                               child: StatCard(
                                 label: 'Feed Today',
                                 value: '0 kg',
@@ -339,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(
+                            const Expanded(
                               child: StatCard(
                                 label: 'Feed Waste %',
                                 value: '0%',
@@ -353,125 +356,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Inventory Section
-                    SectionHeader(
-                      title: 'Inventory',
-                      icon: Icons.inventory,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.gray200),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      '0 kg',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const Text(
-                                      'Feed Stock',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.gray600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.add, size: 16),
-                                    label: const Flexible(
-                                      child: Text('Add Stock',
-                                          overflow: TextOverflow.ellipsis),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.gray700,
-                                      side: BorderSide(color: AppColors.gray300),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.gray200),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      '0 Items',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const Text(
-                                      'Medicine & Minerals',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.gray600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.medical_services, size: 16),
-                                    label: const Flexible(
-                                      child:
-                                          Text('Manage', overflow: TextOverflow.ellipsis),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.gray700,
-                                      side: BorderSide(color: AppColors.gray300),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
                     // Tanks Section
                     SectionHeader(
                       title: 'Tanks',
                       icon: Icons.water,
                       trailing: IconButton(
-                        icon: Icon(Icons.add, color: AppColors.primary),
+                        icon: const Icon(Icons.add, color: AppColors.primary),
                         onPressed: () {
                           // The method `_showTankDialog` already handles both adding and editing.
                           // We call it without the `tank` parameter to add a new one.
@@ -555,61 +445,59 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const Divider(),
-                  Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: provider.farms.length,
-                      itemBuilder: (context, index) {
-                        final farm = provider.farms[index];
-                        final isSelected = farm.id == provider.currentFarm?.id;
-                        return ListTile(
-                          leading: Icon(
-                            Icons.agriculture,
-                            color: isSelected ? AppColors.primary : AppColors.gray500,
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: provider.farms.length,
+                    itemBuilder: (context, index) {
+                      final farm = provider.farms[index];
+                      final isSelected = farm.id == provider.currentFarm?.id;
+                      return ListTile(
+                        leading: Icon(
+                          Icons.agriculture,
+                          color: isSelected ? AppColors.primary : AppColors.gray500,
+                        ),
+                        title: Text(
+                          farm.name,
+                          style: TextStyle(
+                            color: isSelected ? AppColors.primary : AppColors.gray900,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
-                          title: Text(
-                            farm.name,
-                            style: TextStyle(
-                              color: isSelected ? AppColors.primary : AppColors.gray900,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                          onTap: () {
-                            provider.selectFarm(farm);
-                            context.read<TankProvider>().loadTanks(farm.id);
-                            Navigator.pop(context);
-                          },
-                          trailing: isSelected
-                              ? PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert),
-                                  onSelected: (value) {
-                                    Navigator.pop(context); // Close bottom sheet first
-                                    if (value == 'edit') {
-                                      _showEditFarmDialog(context, farm);
-                                    } else if (value == 'delete') {
-                                      _showDeleteFarmConfirmationDialog(context, farm);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text('Edit Farm'),
+                        ),
+                        onTap: () {
+                          provider.selectFarm(farm);
+                          context.read<TankProvider>().loadTanks(farm.id);
+                          Navigator.pop(context);
+                        },
+                        trailing: isSelected
+                            ? PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert),
+                                onSelected: (value) {
+                                  Navigator.pop(context); // Close bottom sheet first
+                                  if (value == 'edit') {
+                                    _showEditFarmDialog(context, farm); // This calls the method below which uses EditFarmDialog
+                                  } else if (value == 'delete') {
+                                    _showDeleteFarmConfirmationDialog(context, farm);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text('Edit Farm'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text(
+                                      'Delete Farm',
+                                      style: TextStyle(color: AppColors.danger),
                                     ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        'Delete Farm',
-                                        style: TextStyle(color: AppColors.danger),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : isSelected
-                                  ? const Icon(Icons.check, color: AppColors.primary)
-                                  : null,
-                        );
-                      },
-                    ),
+                                  ),
+                                ],
+                              )
+                            : isSelected
+                                ? const Icon(Icons.check, color: AppColors.primary)
+                                : null,
+                      );
+                    },
                   ),
                   const Divider(),
                   ListTile(
@@ -633,250 +521,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAddFarmDialog(BuildContext context) {
-    final nameController = TextEditingController();
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Farm'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Farm Name',
-                  hintText: 'e.g., Shree Shrimp Farm',
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                final auth = context.read<AuthNotifier>();
-                await context.read<FarmProvider>().addFarm(
-                  auth.user!.id,
-                  nameController.text,
-                );
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            child: const Text('Save Farm'),
-          ),
-        ],
-      ),
+      builder: (context) => const AddFarmDialog(),
     );
   }
 
   void _showEditFarmDialog(BuildContext context, Farm farm) {
-    final nameController = TextEditingController(text: farm.name);
-    final locationController = TextEditingController(text: farm.location);
-    final contactController = TextEditingController(text: farm.contact);
-    final phoneController = TextEditingController(text: farm.phone);
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Farm'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Farm Name')),
-              TextField(controller: locationController, decoration: const InputDecoration(labelText: 'Location')),
-              TextField(controller: contactController, decoration: const InputDecoration(labelText: 'Contact Person')),
-              TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone Number')),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              final updatedFarm = Farm(
-                id: farm.id,
-                name: nameController.text,
-                location: locationController.text,
-                contact: contactController.text,
-                phone: phoneController.text,
-              );
-              await context.read<FarmProvider>().updateFarm(updatedFarm);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Save Changes'),
-          ),
-        ],
-      ),
+      builder: (context) => EditFarmDialog(farm: farm),
     );
   }
 
   void _showTankDialog(BuildContext context, String farmId, {Tank? tank}) {
-    final isEditing = tank != null;
-    final nameController = TextEditingController(text: tank?.name);
-    final sizeController = TextEditingController(text: tank?.size?.toString());
-    final seedController = TextEditingController(text: tank?.initialSeed?.toString());
-    final plSizeController = TextEditingController(text: tank?.plSize);
-    DateTime selectedDate = tank?.stockingDate ?? DateTime.now();
-
-    // Default values for dropdowns
-    int blindWeek1 = tank?.blindWeek1 ?? 2;
-    int blindStd = tank?.blindStd ?? 4;
-
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-          title: Text(isEditing ? 'Edit Tank' : 'Add New Tank'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Tank Name',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: sizeController,
-                        decoration: const InputDecoration(
-                          labelText: 'Area (acres)'
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: seedController,
-                        decoration: const InputDecoration(
-                          labelText: 'Stocking Count'
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: plSizeController,
-                        decoration: const InputDecoration(
-                          labelText: 'PL Size'
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) setState(() => selectedDate = date);
-                        },
-                        child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Stocking Date',
-                          ),
-                          child: Text(
-                            AppDateUtils.getFormattedDate(selectedDate),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        value: blindWeek1,
-                        decoration: const InputDecoration(
-                          labelText: 'Week 1 Feeds',
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 2, child: Text('2 Feeds')),
-                          DropdownMenuItem(value: 3, child: Text('3 Feeds')),
-                          DropdownMenuItem(value: 4, child: Text('4 Feeds')),
-                        ],
-                        onChanged: (value) => setState(() => blindWeek1 = value!),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        value: blindStd,
-                        decoration: const InputDecoration(
-                          labelText: 'Standard Feeds',
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 3, child: Text('3 Feeds')),
-                          DropdownMenuItem(value: 4, child: Text('4 Feeds')),
-                          DropdownMenuItem(value: 5, child: Text('5 Feeds')),
-                        ],
-                        onChanged: (value) => setState(() => blindStd = value!),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final newTankData = Tank(
-                  id: tank?.id ?? '',
-                  farmId: farmId,
-                  name: nameController.text,
-                  size: double.tryParse(sizeController.text),
-                  stockingDate: selectedDate,
-                  initialSeed: int.tryParse(seedController.text),
-                  plSize: plSizeController.text,
-                  blindWeek1: blindWeek1,
-                  blindStd: blindStd,
-                );
-                if (isEditing) {
-                  await context.read<TankProvider>().updateTank(newTankData);
-                } else {
-                  await context.read<TankProvider>().addTank(newTankData);
-                }
-                if (context.mounted) Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: Text(isEditing ? 'Update Tank' : 'Save Tank'),
-            ),
-          ],
-          );
-        },
-      ),
+      builder: (context) => TankDialog(farmId: farmId, tank: tank),
     );
   }
 

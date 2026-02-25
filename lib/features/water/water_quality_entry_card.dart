@@ -23,7 +23,7 @@ class WaterQualityEntryCard extends StatelessWidget {
         children: [
           Text(
             AppDateUtils.getDisplayDate(entry.date),
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.gray700,
             ),
@@ -49,12 +49,12 @@ class WaterQualityEntryCard extends StatelessWidget {
           ),
           if (entry.notes != null && entry.notes!.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Notes:',
               style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.gray600),
             ),
             const SizedBox(height: 4),
-            Text(entry.notes!, style: TextStyle(color: AppColors.gray700)),
+            Text(entry.notes!, style: const TextStyle(color: AppColors.gray700)),
           ]
         ],
       ),
@@ -69,7 +69,7 @@ class WaterQualityEntryCard extends StatelessWidget {
           children: [
             Icon(icon, size: 12, color: AppColors.gray500),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 11, color: AppColors.gray600)),
+            Text(label, style: const TextStyle(fontSize: 11, color: AppColors.gray600)),
           ],
         ),
         const SizedBox(height: 2),

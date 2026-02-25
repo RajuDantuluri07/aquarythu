@@ -1,10 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../dashboard/farm.dart';
-import '../dashboard/pond.dart';
+import '../tank/tank_model.dart';
 import 'blind_feed_schedule.dart';
-import 'feed_round.dart';
-import '../feeding/models/tray_log.dart';
+import 'feed_round.dart'; // Contains FeedLog class now
+import 'package:aquarythu/features/feeding/models/tray_log.dart';
 
 class FarmRepository {
   final SupabaseClient _client;
@@ -16,10 +16,10 @@ class FarmRepository {
     await _client.from('farms').insert(farm.toMap());
   }
 
-  Future<void> createPonds(List<Pond> ponds) async {
-    if (ponds.isEmpty) return;
-    final data = ponds.map((pond) => pond.toMap()).toList();
-    await _client.from('ponds').insert(data);
+  Future<void> createTanks(List<Tank> tanks) async {
+    if (tanks.isEmpty) return;
+    final data = tanks.map((tank) => tank.toMap()).toList();
+    await _client.from('tanks').insert(data);
   }
 
   Future<void> createBlindFeedSchedules(List<BlindFeedSchedule> schedules) async {
@@ -28,34 +28,34 @@ class FarmRepository {
     await _client.from('blind_feed_schedule').insert(data);
   }
 
-  Future<List<BlindFeedSchedule>> getBlindFeedSchedule(String pondId) async {
+  Future<List<BlindFeedSchedule>> getBlindFeedSchedule(String tankId) async {
     final response = await _client
         .from('blind_feed_schedule')
         .select()
-        .eq('pond_id', pondId)
+        .eq('tank_id', tankId)
         .order('day_of_culture', ascending: true);
 
     return (response as List).map((data) => BlindFeedSchedule.fromMap(data)).toList();
   }
 
-  Future<void> createTrayLogs(List<TrayLog> logs) async {
+  Future<void> createTrayChecks(List<TrayLog> logs) async {
     if (logs.isEmpty) return;
     final data = logs.map((log) => log.toMap()).toList();
-    await _client.from('tray_logs').insert(data);
+    await _client.from('tray_checks').insert(data);
   }
 
-  Future<List<({FeedRound round, Pond pond})>> getPendingFeedRounds() async {
+  Future<List<({FeedLog round, Tank tank})>> getPendingFeedLogs() async {
     final response = await _client
-        .from('feed_rounds')
-        .select('*, ponds(*)')
+        .from('feed_logs')
+        .select('*, tanks(*)')
         .eq('is_completed', false)
         .order('scheduled_at');
 
     return (response as List).map((data) {
-      final round = FeedRound.fromMap(data);
-      final pondData = data['ponds'] as Map<String, dynamic>;
-      final pond = Pond.fromMap(pondData);
-      return (round: round, pond: pond);
+      final round = FeedLog.fromMap(data);
+      final tankData = data['tanks'] as Map<String, dynamic>;
+      final tank = Tank.fromJson(tankData);
+      return (round: round, tank: tank);
     }).toList();
   }
 }
