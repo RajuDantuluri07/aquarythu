@@ -46,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final updatedFarmProvider = context.read<FarmProvider>();
           if (updatedFarmProvider.currentFarm != null) {
             await context.read<TankProvider>().loadTanks(updatedFarmProvider.currentFarm!.id);
+            if (!mounted) return;
           }
         }
       } catch (e) {
@@ -58,17 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final farmProvider = context.watch<FarmProvider>();
     final tankProvider = context.watch<TankProvider>();
-    final feedProvider = context.watch<FeedProvider>();
 
-    // Calculate global feed metrics
+    // Calculate global metrics
     final totalBiomass = tankProvider.tanks.fold<double>(0, (sum, tank) => sum + tank.biomass);
-    final totalFeedToday = feedProvider.entries
-        .where((entry) => 
-          entry.date.day == DateTime.now().day &&
-          entry.date.month == DateTime.now().month &&
-          entry.date.year == DateTime.now().year)
-        .fold<double>(0, (sum, entry) => sum + entry.amount);
-    final totalFeedAllTime = feedProvider.entries.fold<double>(0, (sum, entry) => sum + entry.amount);
 
     return Scaffold(
       backgroundColor: AppColors.gray100,
@@ -559,20 +552,24 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showDeleteConfirmation(BuildContext context, String tankId) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Tank?'),
         content: const Text(
           'Are you sure you want to delete this tank? All associated data will be permanently deleted.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              await context.read<TankProvider>().deleteTank(tankId);
-              if (context.mounted) Navigator.pop(context);
+            onPressed: () {
+              // Capture provider before async operations
+              final tankProvider = dialogContext.read<TankProvider>();
+              // Close dialog immediately
+              Navigator.pop(dialogContext);
+              // Defer delete operation to avoid deactivated widget errors
+              Future.microtask(() => tankProvider.deleteTank(tankId));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.danger,
@@ -588,20 +585,24 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showDeleteFarmConfirmationDialog(BuildContext context, Farm farm) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text('Delete ${farm.name}?'),
         content: const Text(
           'Are you sure you want to delete this farm? All associated tanks and data will be permanently deleted. This action cannot be undone.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              await context.read<FarmProvider>().deleteFarm(farm.id);
-              if (context.mounted) Navigator.pop(context);
+            onPressed: () {
+              // Capture provider before async operations
+              final farmProvider = dialogContext.read<FarmProvider>();
+              // Close dialog immediately
+              Navigator.pop(dialogContext);
+              // Defer delete operation to avoid deactivated widget errors
+              Future.microtask(() => farmProvider.deleteFarm(farm.id));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.danger,

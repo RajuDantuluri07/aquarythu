@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/utils/date_utils.dart';
+import '../farm/blind_feed_schedule.dart';
 import 'tank_model.dart';
 
 class TankProvider extends ChangeNotifier {
@@ -50,13 +52,20 @@ class TankProvider extends ChangeNotifier {
       
       _tanks.add(Tank.fromJson(response));
       
+      // Auto-generate blind feed schedules for DOC 1-30
+      if (newTank.initialSeed != null && newTank.size != null) {
+        await _generateAndSaveBlindSchedules(
+          tankId,
+          newTank.initialSeed!,
+          newTank.size!,
+        );
+      }
+      
       notifyListeners();
     } catch (e) {
       debugPrint('Error adding tank: $e');
       rethrow;
     }
-
-    return schedules;
   }
 
   Future<void> updateTank(Tank tank) async {
@@ -91,5 +100,60 @@ class TankProvider extends ChangeNotifier {
         .eq('id', tankId);
     _tanks.removeWhere((t) => t.id == tankId);
     notifyListeners();
+  }
+
+  Future<void> _generateAndSaveBlindSchedules(
+    String tankId,
+    int initialSeed,
+    double areaAcres,
+  ) async {
+    try {
+      final schedules = _generateBlindFeedSchedule(tankId, initialSeed, areaAcres);
+      final data = schedules.map((s) => s.toMap()).toList();
+      await Supabase.instance.client.from('blind_feed_schedule').insert(data);
+    } catch (e) {
+      debugPrint('Error generating blind feed schedules: $e');
+      // Don't rethrow - allow tank to be created even if schedules fail
+    }
+  }
+
+  List<BlindFeedSchedule> _generateBlindFeedSchedule(
+    String tankId,
+    int initialSeed,
+    double areaAcres,
+  ) {
+    final List<BlindFeedSchedule> schedules = [];
+    const uuid = Uuid();
+
+    final feedPerAcrePerDay = (initialSeed / 10000) * 0.05;
+    final totalFeedPerDay = feedPerAcrePerDay * areaAcres;
+
+    for (int doc = 1; doc <= 30; doc++) {
+      double dailyFeed = totalFeedPerDay;
+      String feedType = 'Starter 1';
+
+      if (doc <= 10) {
+        dailyFeed = totalFeedPerDay * 0.5;
+        feedType = 'Starter 1';
+      } else if (doc <= 20) {
+        dailyFeed = totalFeedPerDay * 0.75;
+        feedType = 'Starter 2';
+      } else {
+        dailyFeed = totalFeedPerDay;
+        feedType = 'Grower 1';
+      }
+
+      schedules.add(
+        BlindFeedSchedule(
+          id: uuid.v4(),
+          tankId: tankId,
+          dayOfCulture: doc,
+          dailyFeedAmount: dailyFeed,
+          feedType: feedType,
+        ),
+      );
+    }
+
+    return schedules;
   }
 }
