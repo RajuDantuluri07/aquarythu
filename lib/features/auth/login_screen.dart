@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.water_drop, size: 64, color: AppColors.primary),
+                Image.asset('assets/icon/app_icon.png', height: 120),
                 const SizedBox(height: 16),
                 const Text(
                   'AquaRythu',

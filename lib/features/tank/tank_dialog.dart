@@ -34,15 +34,15 @@ class _TankDialogState extends State<TankDialog> {
     plSizeController = TextEditingController(text: widget.tank?.plSize);
     selectedDate = widget.tank?.stockingDate ?? DateTime.now();
 
+    final initialBlindWeek1 = widget.tank?.blindWeek1;
     const validWeek1 = [2, 3, 4];
-    blindWeek1 = (widget.tank?.blindWeek1 != null && validWeek1.contains(widget.tank!.blindWeek1))
-        ? widget.tank!.blindWeek1
-        : 2;
+    blindWeek1 =
+        (initialBlindWeek1 != null && validWeek1.contains(initialBlindWeek1)) ? initialBlindWeek1 : 2;
 
+    final initialBlindStd = widget.tank?.blindStd;
     const validStd = [3, 4, 5];
-    blindStd = (widget.tank?.blindStd != null && validStd.contains(widget.tank!.blindStd))
-        ? widget.tank!.blindStd
-        : 4;
+    blindStd =
+        (initialBlindStd != null && validStd.contains(initialBlindStd)) ? initialBlindStd : 4;
   }
 
   @override

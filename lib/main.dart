@@ -18,8 +18,11 @@ void main() async {
 
   try {
     await Supabase.initialize(
+      // IMPORTANT: The key below was invalid.
+      // Please replace 'YOUR_SUPABASE_ANON_KEY' with the actual "anon" "public" key
+      // from your Supabase project dashboard under Project Settings > API.
       url: 'https://vwdzrzdvmgoqezatjhbr.supabase.co',
-      anonKey: 'sb_publishable_z_5942T3HoGRt-eXcVcU5w_Isd3pDVz',
+      anonKey: 'sb_publishable_z_5942T3HoGRt-eXcVcU5w_Isd3pDVz', // <--- PASTE YOUR ACTUAL KEY HERE (Starts with eyJ)
     );
   } catch (e) {
     debugPrint('Supabase initialization failed: $e');
