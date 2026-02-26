@@ -57,16 +57,28 @@ class AuthNotifier extends ChangeNotifier {
     try {
       if (kIsWeb) {
         // --- WEB FLOW ---
+        // Pass this via --dart-define=GOOGLE_REDIRECT_URL=https://your-app.com
+        const redirectUrl = String.fromEnvironment('GOOGLE_REDIRECT_URL');
+        if (redirectUrl.isEmpty) {
+          // For local development, you can fall back to a default.
+          // But for production builds, it should be provided.
+          debugPrint('GOOGLE_REDIRECT_URL not set, using default for local dev.');
+          const defaultUrl = 'http://localhost:3000'; // Or your specific local setup
+          await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google, redirectTo: defaultUrl);
+          return true;
+        }
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: 'http://localhost:3000', // Replace with your production URL if needed
+          redirectTo: redirectUrl,
         );
         return true;
       } else {
         // --- MOBILE FLOW (Native) ---
-        // NOTE: You must configure SHA-1 in Google Cloud Console for this to work.
-        // The serverClientId is the "Web Client ID" from Google Cloud Console.
-        const webClientId = '782759620106-nbsdbsaqab0hb58iuie1tardmvhhogb1.apps.googleusercontent.com';
+        // Pass this via --dart-define=GOOGLE_WEB_CLIENT_ID=YOUR_ID
+        const webClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+        if (webClientId.isEmpty) {
+          throw 'GOOGLE_WEB_CLIENT_ID is not configured for mobile builds.';
+        }
 
         final GoogleSignIn googleSignIn = GoogleSignIn(
           serverClientId: webClientId,

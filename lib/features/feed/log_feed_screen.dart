@@ -67,7 +67,7 @@ class _LogFeedScreenState extends State<LogFeedScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
 

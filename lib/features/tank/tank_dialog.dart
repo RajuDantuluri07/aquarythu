@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/theme/theme.dart';
 import '../../core/utils/date_utils.dart';
 import 'tank_model.dart';
+import '../farm/blind_feed_schedule_provider.dart';
 import 'tank_provider.dart';
 
 class TankDialog extends StatefulWidget {
@@ -157,7 +159,7 @@ class _TankDialogState extends State<TankDialog> {
         ElevatedButton(
           onPressed: () async {
             final newTankData = Tank(
-              id: widget.tank?.id ?? '',
+              id: widget.tank?.id ?? const Uuid().v4(), // Generate UUID for new tanks
               farmId: widget.farmId,
               name: nameController.text,
               size: double.tryParse(sizeController.text),
@@ -167,12 +169,34 @@ class _TankDialogState extends State<TankDialog> {
               blindWeek1: blindWeek1,
               blindStd: blindStd,
             );
-            if (isEditing) {
-              await context.read<TankProvider>().updateTank(newTankData);
-            } else {
-              await context.read<TankProvider>().addTank(newTankData);
+            try {
+              final tankProvider = context.read<TankProvider>();
+              if (isEditing) {
+                await tankProvider.updateTank(newTankData);
+              } else {
+                await tankProvider.addTank(newTankData);
+
+                // After creating tank, generate the blind feed schedule.
+                if (context.mounted &&
+                    newTankData.initialSeed != null &&
+                    newTankData.size != null) {
+                  await context.read<BlindFeedScheduleProvider>().generateSchedules(
+                        newTankData.id,
+                        initialSeed: newTankData.initialSeed!,
+                        areaAcres: newTankData.size!,
+                      );
+                  _showBlindFeedConfirmation(context, newTankData);
+                  return; // Don't pop yet
+                }
+              }
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error saving tank: $e')),
+                );
+              }
             }
-            if (context.mounted) Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
@@ -181,6 +205,42 @@ class _TankDialogState extends State<TankDialog> {
           child: Text(isEditing ? 'Update Tank' : 'Save Tank'),
         ),
       ],
+    );
+  }
+
+  void _showBlindFeedConfirmation(BuildContext context, Tank tank) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Tank Created! 🎉'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Blind feed schedule has been auto-generated for DOC 1-30.'),
+            const SizedBox(height: 12),
+            Text(
+              'Tank: ${tank.name}\nStocking: ${tank.initialSeed ?? 0} at ${tank.plSize} PL\nArea: ${tank.size ?? 0} acres',
+              style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'You can view and edit the schedule in the tank details screen.',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Done', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 }

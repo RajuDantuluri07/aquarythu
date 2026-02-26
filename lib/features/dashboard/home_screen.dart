@@ -35,12 +35,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     final auth = context.read<AuthNotifier>();
     if (auth.user != null) {
-      await context.read<FarmProvider>().loadFarms(auth.user!.id);
-      if (context.mounted) {
+      try {
         final farmProvider = context.read<FarmProvider>();
-        if (farmProvider.currentFarm != null) {
-          await context.read<TankProvider>().loadTanks(farmProvider.currentFarm!.id);
+        // Only load if farms list is empty (not already loaded)
+        if (farmProvider.farms.isEmpty) {
+          await farmProvider.loadFarms(auth.user!.id);
         }
+        
+        if (context.mounted) {
+          final updatedFarmProvider = context.read<FarmProvider>();
+          if (updatedFarmProvider.currentFarm != null) {
+            await context.read<TankProvider>().loadTanks(updatedFarmProvider.currentFarm!.id);
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading data: $e');
       }
     }
   }
@@ -49,11 +58,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final farmProvider = context.watch<FarmProvider>();
     final tankProvider = context.watch<TankProvider>();
+    final feedProvider = context.watch<FeedProvider>();
 
-    // TODO: Calculate global feed metrics. This requires a larger architectural
-    // change to fetch feed data for all tanks, possibly through a global provider
-    // or backend aggregation, to avoid performance issues.
+    // Calculate global feed metrics
     final totalBiomass = tankProvider.tanks.fold<double>(0, (sum, tank) => sum + tank.biomass);
+    final totalFeedToday = feedProvider.entries
+        .where((entry) => 
+          entry.date.day == DateTime.now().day &&
+          entry.date.month == DateTime.now().month &&
+          entry.date.year == DateTime.now().year)
+        .fold<double>(0, (sum, entry) => sum + entry.amount);
+    final totalFeedAllTime = feedProvider.entries.fold<double>(0, (sum, entry) => sum + entry.amount);
 
     return Scaffold(
       backgroundColor: AppColors.gray100,

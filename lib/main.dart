@@ -9,6 +9,7 @@ import 'features/auth/auth_wrapper.dart';
 import 'features/farm/farm_provider.dart';
 import 'features/tank/tank_provider.dart';
 import 'features/feed/feed_provider.dart';
+import 'features/farm/blind_feed_schedule_provider.dart';
 import 'features/water/water_quality_provider.dart';
 import 'features/harvest/harvest_provider.dart';
 
@@ -17,12 +18,18 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Use String.fromEnvironment to get keys from build command
+    // Example: flutter build apk --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANON_KEY=YOUR_KEY
+    const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://vwdzrzdvmgoqezatjhbr.supabase.co');
+    const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+    if (supabaseAnonKey.isEmpty) {
+      throw 'SUPABASE_ANON_KEY is not provided. Please pass it as a --dart-define argument.';
+    }
+
     await Supabase.initialize(
-      // IMPORTANT: The key below was invalid.
-      // Please replace 'YOUR_SUPABASE_ANON_KEY' with the actual "anon" "public" key
-      // from your Supabase project dashboard under Project Settings > API.
-      url: 'https://vwdzrzdvmgoqezatjhbr.supabase.co',
-      anonKey: 'sb_publishable_z_5942T3HoGRt-eXcVcU5w_Isd3pDVz', // <--- PASTE YOUR ACTUAL KEY HERE (Starts with eyJ)
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
     );
   } catch (e) {
     debugPrint('Supabase initialization failed: $e');
@@ -42,6 +49,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FarmProvider()),
         ChangeNotifierProvider(create: (_) => TankProvider()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
+        ChangeNotifierProvider(create: (_) => BlindFeedScheduleProvider()),
         ChangeNotifierProvider(create: (_) => WaterQualityProvider()),
         ChangeNotifierProvider(create: (_) => HarvestProvider()),
       ],

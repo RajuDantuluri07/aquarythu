@@ -11,30 +11,44 @@ class FarmProvider extends ChangeNotifier {
   Farm? get currentFarm => _currentFarm;
 
   Future<void> loadFarms(String userId) async {
-    final response = await Supabase.instance.client
-        .from('farms')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at');
-    _farms = (response as List).map((e) => Farm.fromJson(e)).toList();
-    if (_farms.isNotEmpty && _currentFarm == null) {
-      _currentFarm = _farms.first;
+    try {
+      final response = await Supabase.instance.client
+          .from('farms')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at');
+      _farms = (response as List).map((e) => Farm.fromJson(e)).toList();
+      if (_farms.isNotEmpty && _currentFarm == null) {
+        _currentFarm = _farms.first;
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading farms: $e');
+      rethrow;
     }
-    notifyListeners();
   }
 
   Future<void> addFarm(String userId, String name) async {
-    final response = await Supabase.instance.client
-        .from('farms')
-        .insert({
-          'user_id': userId,
-          'name': name,
-        })
-        .select()
-        .single();
-    _farms.add(Farm.fromJson(response));
-    if (_farms.length == 1) _currentFarm = _farms.first;
-    notifyListeners();
+    try {
+      final response = await Supabase.instance.client
+          .from('farms')
+          .insert({
+            'user_id': userId,
+            'name': name,
+          })
+          .select()
+          .single();
+      final newFarm = Farm.fromJson(response);
+      _farms.add(newFarm);
+      // Set as current farm if this is the first farm
+      if (_farms.length == 1) {
+        _currentFarm = newFarm;
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error adding farm: $e');
+      rethrow;
+    }
   }
 
   void selectFarm(Farm farm) {

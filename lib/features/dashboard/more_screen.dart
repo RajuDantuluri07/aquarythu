@@ -48,9 +48,7 @@ class MoreScreen extends StatelessWidget {
                     subtitle: 'View and edit your profile',
                     color: AppColors.primary,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Profile page coming soon...')),
-                      );
+                      _showProfileDialog(context);
                     },
                   ),
                   const SizedBox(height: 12),
@@ -355,6 +353,36 @@ class MoreScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileDialog(BuildContext context) {
+    final auth = context.read<AuthNotifier>();
+    final email = auth.user?.email ?? 'Not available';
+    final userId = auth.user?.id ?? 'Not available';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Your Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Email: $email', style: const TextStyle(fontSize: 14)),
+            const SizedBox(height: 8),
+            Text('User ID: ${userId.substring(0, 8)}...', style: const TextStyle(fontSize: 12, color: AppColors.gray600)),
+            const SizedBox(height: 16),
+            const Text('Account active and ready to use!', style: TextStyle(color: AppColors.success)),
+          ],
         ),
         actions: [
           TextButton(

@@ -58,7 +58,7 @@ class _TrayLoggingScreenState extends State<TrayLoggingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Tray logs saved successfully!')),
         );
-        Navigator.pop(context);
+        if (mounted) Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
