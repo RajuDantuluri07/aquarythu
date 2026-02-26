@@ -49,13 +49,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleGoogleLogin() async {
     setState(() => _isLoading = true);
     final auth = context.read<AuthNotifier>();
-    final success = await auth.signInWithGoogle();
+    final result = await auth.signInWithGoogle();
     
     if (mounted) {
       setState(() => _isLoading = false);
-      if (!success) {
+      if (result['success'] == false) {
+        final errorMsg = result['error'] ?? 'Google Sign-In failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google Sign-In failed.')),
+          SnackBar(
+            content: Text(errorMsg),
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
