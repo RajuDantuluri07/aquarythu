@@ -36,7 +36,7 @@ class FarmSetupNotifier extends ChangeNotifier {
         stockingDate: DateTime.now(),
         size: 0.0,
         initialSeed: 0,
-        plSize: '',
+        plSize: null,
       ),
     );
     notifyListeners();

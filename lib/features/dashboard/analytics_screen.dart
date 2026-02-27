@@ -16,7 +16,7 @@ class AnalyticsScreen extends StatelessWidget {
     final harvestProvider = context.watch<HarvestProvider>();
     final tankProvider = context.watch<TankProvider>();
     
-    final totalFeed = feedProvider.entries.fold<double>(0, (sum, e) => sum + e.amount);
+    final totalFeed = feedProvider.entries.fold<double>(0, (sum, e) => sum + e.feedQuantity);
     final totalHarvest = harvestProvider.entries.fold<double>(0, (sum, e) => sum + e.weight);
     final avgFcr = totalHarvest > 0 ? totalFeed / totalHarvest : 0.0;
     

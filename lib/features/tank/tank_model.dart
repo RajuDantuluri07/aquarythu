@@ -7,7 +7,7 @@ class Tank {
   final double? size;
   final DateTime stockingDate;
   final int? initialSeed;
-  final String? plSize;
+  final int? plSize;
   final int checkTrays;
   double biomass;
   int blindDuration;
@@ -50,7 +50,7 @@ class Tank {
     double? size,
     DateTime? stockingDate,
     int? initialSeed,
-    String? plSize,
+    int? plSize,
     int? checkTrays,
     double? biomass,
     int? blindDuration,
@@ -92,7 +92,7 @@ class Tank {
     size: (json['size'] ?? json['acre_size'])?.toDouble(), // Map acre_size
     stockingDate: DateTime.parse(json['stocking_date']),
     initialSeed: json['initial_seed'] ?? json['stocking_count'], // Map stocking_count
-    plSize: json['pl_size']?.toString(), // pl_per_m2 is int in DB, plSize is String here
+    plSize: (json['pl_size'] as num?)?.toInt(), // pl_per_m2 is int in DB
     checkTrays: json['check_trays'] ?? json['number_of_trays'] ?? 2, // Map number_of_trays
     biomass: (json['biomass'] ?? 0).toDouble(),
     blindDuration: json['blind_duration'] ?? 30,
@@ -111,9 +111,9 @@ class Tank {
       'id': id,
       'farm_id': farmId,
       'name': name,
-      'size': size,
+      'acre_size': size,
       'stocking_date': stockingDate.toIso8601String(),
-      'initial_seed': initialSeed,
+      'stocking_count': initialSeed,
       'pl_size': plSize,
       'check_trays': checkTrays,
       'biomass': biomass,

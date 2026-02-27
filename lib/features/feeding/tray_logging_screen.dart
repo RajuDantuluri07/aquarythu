@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/theme/theme.dart';
@@ -32,6 +33,21 @@ class _TrayLoggingScreenState extends State<TrayLoggingScreen> {
     });
   }
 
+  // LOGIC: Calculate weighted average score based on PRD Module 5
+  double get _calculatedScore {
+    if (_trayStatuses.isEmpty) return 0.0;
+    double total = 0;
+    for (var status in _trayStatuses.values) {
+      switch (status) {
+        case TrayStatus.completed: total += 1.0; break;
+        case TrayStatus.littleLeft: total += 0.75; break;
+        case TrayStatus.half: total += 0.5; break;
+        case TrayStatus.tooMuch: total += 0.25; break;
+      }
+    }
+    return total / _trayStatuses.length;
+  }
+
   Future<void> _saveLogs() async {
     if (_trayStatuses.length != widget.tank.checkTrays) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,6 +69,12 @@ class _TrayLoggingScreenState extends State<TrayLoggingScreen> {
       }).toList();
 
       await _repository.createTrayChecks(logs);
+
+      // UPDATE: Save the calculated score to the main feed log
+      await Supabase.instance.client.from('feed_logs').update({
+        'tray_score': _calculatedScore,
+        'tray_status': _calculatedScore >= 0.85 ? 'Optimal' : 'Needs Adjustment', // Simple text status
+      }).eq('id', widget.feedLogId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,6 +118,19 @@ class _TrayLoggingScreenState extends State<TrayLoggingScreen> {
                     },
                   ),
                 ),
+                // UI: Show live score calculation
+                if (_trayStatuses.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    color: Colors.grey.shade100,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Efficiency Score:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${(_calculatedScore * 100).toStringAsFixed(0)}%', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ],
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: SizedBox(

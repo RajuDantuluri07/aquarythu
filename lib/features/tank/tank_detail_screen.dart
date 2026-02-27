@@ -54,13 +54,20 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
     }
 
     // Sort entries by date to ensure chart renders correctly
-    final sortedEntries = List<FeedEntry>.from(entries)..sort((a, b) => a.date.compareTo(b.date));
+    final sortedEntries = List<FeedEntry>.from(entries)..sort((a, b) {
+      // Handle null dates (put null dates at the end)
+      if (a.executedAt == null) return 1;
+      if (b.executedAt == null) return -1;
+      return a.executedAt!.compareTo(b.executedAt!);
+    });
 
     // Group entries by date and sum amounts
     final Map<String, double> dailyAmounts = {};
     for (var entry in sortedEntries) {
-      final dateKey = AppDateUtils.getShortDate(entry.date);
-      dailyAmounts[dateKey] = (dailyAmounts[dateKey] ?? 0) + entry.amount;
+      if (entry.executedAt != null) {
+        final dateKey = AppDateUtils.getShortDate(entry.executedAt!);
+        dailyAmounts[dateKey] = (dailyAmounts[dateKey] ?? 0) + entry.feedQuantity;
+      }
     }
 
     final maxAmount = dailyAmounts.values.isEmpty
@@ -360,7 +367,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
           child: FeedEntryCard(
             entry: entry,
             onTap: () {},
-            onEdit: () {},
+            onDelete: () {}, // Changed from onEdit to onDelete to match FeedEntryCard
           ),
         );
       },
@@ -385,7 +392,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
   }
 
   Widget _buildAnalyticsTab(FeedProvider feedProvider, HarvestProvider harvestProvider) {
-    final totalFeed = feedProvider.entries.fold<double>(0, (sum, e) => sum + e.amount);
+    final totalFeed = feedProvider.entries.fold<double>(0, (sum, e) => sum + e.feedQuantity);
     final totalHarvest = harvestProvider.entries.fold<double>(0, (sum, e) => sum + e.weight);
     final fcr = totalHarvest > 0 ? totalFeed / totalHarvest : 0.0;
     final avgDailyFeed = feedProvider.entries.isEmpty ? 0.0 : totalFeed / (feedProvider.entries.length.toDouble());
@@ -445,7 +452,7 @@ class _TankDetailScreenState extends State<TankDetailScreen> {
     }
     final feedByType = <String, double>{};
     for (var entry in entries) {
-      feedByType[entry.feedType] = (feedByType[entry.feedType] ?? 0) + entry.amount;
+      feedByType[entry.feedType] = (feedByType[entry.feedType] ?? 0) + entry.feedQuantity;
     }
     return Container(
       padding: const EdgeInsets.all(12),

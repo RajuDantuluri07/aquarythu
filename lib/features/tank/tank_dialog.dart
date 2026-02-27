@@ -33,7 +33,7 @@ class _TankDialogState extends State<TankDialog> {
     nameController = TextEditingController(text: widget.tank?.name);
     sizeController = TextEditingController(text: widget.tank?.size?.toString());
     seedController = TextEditingController(text: widget.tank?.initialSeed?.toString());
-    plSizeController = TextEditingController(text: widget.tank?.plSize);
+    plSizeController = TextEditingController(text: widget.tank?.plSize?.toString());
     selectedDate = widget.tank?.stockingDate ?? DateTime.now();
 
     final initialBlindWeek1 = widget.tank?.blindWeek1;
@@ -96,6 +96,7 @@ class _TankDialogState extends State<TankDialog> {
                   child: TextField(
                     controller: plSizeController,
                     decoration: const InputDecoration(labelText: 'PL Size'),
+                    keyboardType: TextInputType.number,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -158,6 +159,28 @@ class _TankDialogState extends State<TankDialog> {
         ),
         ElevatedButton(
           onPressed: () async {
+            if (nameController.text.trim().isEmpty) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tank name cannot be empty')),
+              );
+              return;
+            }
+            if (sizeController.text.trim().isEmpty) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Area cannot be empty')),
+              );
+              return;
+            }
+            if (seedController.text.trim().isEmpty) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Stocking Count cannot be empty')),
+              );
+              return;
+            }
+
             final newTankData = Tank(
               id: widget.tank?.id ?? const Uuid().v4(), // Generate UUID for new tanks
               farmId: widget.farmId,
@@ -165,7 +188,7 @@ class _TankDialogState extends State<TankDialog> {
               size: double.tryParse(sizeController.text),
               stockingDate: selectedDate,
               initialSeed: int.tryParse(seedController.text),
-              plSize: plSizeController.text,
+              plSize: int.tryParse(plSizeController.text.trim()),
               blindWeek1: blindWeek1,
               blindStd: blindStd,
             );

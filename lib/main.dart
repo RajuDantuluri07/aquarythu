@@ -32,10 +32,15 @@ void main() async {
       anonKey: supabaseAnonKey,
     );
   } catch (e) {
-    debugPrint('Supabase initialization failed: $e');
+    // If initialization fails, show an error screen instead of a blank one.
+    runApp(ErrorApp(error: e.toString()));
+    return; // Stop execution
   }
 
-  runApp(const MyApp());
+  // Run the main app only if Supabase initializes successfully.
+  runApp(
+    const MyApp(),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -68,6 +73,26 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const AuthWrapper(),
+      ),
+    );
+  }
+}
+
+/// A simple app to display an error message on a clean screen.
+class ErrorApp extends StatelessWidget {
+  final String error;
+  const ErrorApp({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('Initialization Failed:\n\n$error', textAlign: TextAlign.center),
+          ),
+        ),
       ),
     );
   }

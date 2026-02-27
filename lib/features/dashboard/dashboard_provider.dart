@@ -39,12 +39,20 @@ class DashboardProvider extends ChangeNotifier {
       final feedLogsResponse = await Supabase.instance.client
           .from('feed_logs')
           .select()
-          .in_('tank_id', tankIds);
+          .inFilter('tank_id', tankIds);
       
       final allFeedLogs = (feedLogsResponse as List).map((e) => FeedEntry.fromJson(e)).toList();
 
-      // Step 3: Calculate Metrics
-      _calculateMetrics(allFeedLogs);
+      // Step 3: Get harvest entries for FCR calculation
+      final harvestResponse = await Supabase.instance.client
+          .from('harvest_entries')
+          .select('weight_kg')
+          .inFilter('tank_id', tankIds);
+
+      final totalHarvestWeight = (harvestResponse as List).fold<double>(0, (sum, item) => sum + ((item['weight_kg'] as num?)?.toDouble() ?? 0));
+
+      // Step 4: Calculate Metrics
+      _calculateMetrics(allFeedLogs, totalHarvestWeight);
 
     } catch (e) {
       debugPrint('Error fetching dashboard metrics: $e');
@@ -55,7 +63,7 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
-  void _calculateMetrics(List<FeedEntry> logs) {
+  void _calculateMetrics(List<FeedEntry> logs, double totalHarvestWeight) {
     if (logs.isEmpty) {
       _resetMetrics();
       return;
@@ -73,13 +81,9 @@ class DashboardProvider extends ChangeNotifier {
         .fold(0, (sum, entry) => sum + (entry.feedQuantity ?? 0));
 
     // Calculate Average FCR (Feed Conversion Ratio)
-    // NOTE: This is a placeholder calculation. A real FCR calculation
-    // requires harvest data (Total Biomass Gained / Total Feed).
-    // For now, we'll simulate a simple ratio.
-    // This will be improved when harvest feature is integrated.
-    if (_totalFeedConsumed > 0) {
-      // This is a dummy calculation.
-      _averageFCR = 1.5; 
+    // Formula: Total Feed / Total Harvest Weight
+    if (totalHarvestWeight > 0) {
+      _averageFCR = _totalFeedConsumed / totalHarvestWeight;
     } else {
       _averageFCR = 0;
     }

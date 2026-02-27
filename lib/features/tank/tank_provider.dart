@@ -30,23 +30,26 @@ class TankProvider extends ChangeNotifier {
       // Generate UUID if not provided
       final tankId = tank.id.isNotEmpty ? tank.id : const Uuid().v4();
       final newTank = tank.id.isEmpty ? tank.copyWith(id: tankId) : tank;
-      
+
+      final tankData = {
+        'id': tankId,
+        'farm_id': newTank.farmId,
+        'name': newTank.name,
+        'acre_size': newTank.size,
+        'stocking_date': newTank.stockingDate.toIso8601String(),
+        'stocking_count': newTank.initialSeed,
+        'pl_size': newTank.plSize,
+        'check_trays': newTank.checkTrays,
+        'blind_duration': newTank.blindDuration,
+        'blind_week1': newTank.blindWeek1,
+        'blind_std': newTank.blindStd,
+      };
+      debugPrint('Inserting tank data: $tankData');
+
       // Insert tank into database
       final response = await Supabase.instance.client
           .from('tanks')
-          .insert({
-            'id': tankId,
-            'farm_id': newTank.farmId,
-            'name': newTank.name,
-            'size': newTank.size,
-            'stocking_date': newTank.stockingDate.toIso8601String(),
-            'initial_seed': newTank.initialSeed,
-            'pl_size': newTank.plSize,
-            'check_trays': newTank.checkTrays,
-            'blind_duration': newTank.blindDuration,
-            'blind_week1': newTank.blindWeek1,
-            'blind_std': newTank.blindStd,
-          })
+          .insert(tankData)
           .select()
           .single();
       
@@ -69,22 +72,25 @@ class TankProvider extends ChangeNotifier {
   }
 
   Future<void> updateTank(Tank tank) async {
+    final updateData = {
+      'name': tank.name,
+      'acre_size': tank.size,
+      'stocking_date': tank.stockingDate.toIso8601String(),
+      'stocking_count': tank.initialSeed,
+      'pl_size': tank.plSize,
+      'check_trays': tank.checkTrays,
+      'blind_duration': tank.blindDuration,
+      'blind_week1': tank.blindWeek1,
+      'blind_std': tank.blindStd,
+      'health_status': tank.healthStatus,
+      'health_notes': tank.healthNotes,
+      'dead_count': tank.deadCount,
+    };
+    debugPrint('Updating tank ${tank.id} with data: $updateData');
+
     await Supabase.instance.client
         .from('tanks')
-        .update({
-          'name': tank.name,
-          'size': tank.size,
-          'stocking_date': tank.stockingDate.toIso8601String(),
-          'initial_seed': tank.initialSeed,
-          'pl_size': tank.plSize,
-          'check_trays': tank.checkTrays,
-          'blind_duration': tank.blindDuration,
-          'blind_week1': tank.blindWeek1,
-          'blind_std': tank.blindStd,
-          'health_status': tank.healthStatus,
-          'health_notes': tank.healthNotes,
-          'dead_count': tank.deadCount,
-        })
+        .update(updateData)
         .eq('id', tank.id);
     final index = _tanks.indexWhere((t) => t.id == tank.id);
     if (index != -1) {

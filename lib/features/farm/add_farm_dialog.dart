@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
 import '../auth/auth_provider.dart';
-import '../tank/tank_provider.dart';
+import '../tank/tank_dialog.dart';
+import '../tank/tank_model.dart';
 import 'farm_provider.dart';
 
 class AddFarmDialog extends StatefulWidget {
@@ -55,14 +56,18 @@ class _AddFarmDialogState extends State<AddFarmDialog> {
           onPressed: () async {
             if (nameController.text.isNotEmpty) {
               final auth = context.read<AuthNotifier>();
+              final farmProvider = context.read<FarmProvider>();
               try {
-                await context.read<FarmProvider>().addFarm(
-                      auth.user!.id,
-                      nameController.text,
-                    );
+                await farmProvider.addFarm(
+                  auth.user!.id,
+                  nameController.text,
+                );
                 if (context.mounted) {
+                  final newFarmId = farmProvider.currentFarm?.id;
                   Navigator.pop(context);
-                  _showAddTankFollowUp(context);
+                  if (newFarmId != null) {
+                    _showAddTankFollowUp(context, newFarmId);
+                  }
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -79,7 +84,7 @@ class _AddFarmDialogState extends State<AddFarmDialog> {
     );
   }
 
-  void _showAddTankFollowUp(BuildContext context) {
+  void _showAddTankFollowUp(BuildContext context, String farmId) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -95,15 +100,20 @@ class _AddFarmDialogState extends State<AddFarmDialog> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Click the "+" button on your farm card to add a tank')),
-              );
+              _showTankDialog(context, farmId);
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('Add Tank', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
+    );
+  }
+
+  void _showTankDialog(BuildContext context, String farmId, {Tank? tank}) {
+    showDialog(
+      context: context,
+      builder: (context) => TankDialog(farmId: farmId, tank: tank),
     );
   }
 }

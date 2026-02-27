@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/theme.dart';
 import '../../core/utils/date_utils.dart';
 import 'feed_provider.dart';
+import 'feed_model.dart';
 
 class LogFeedScreen extends StatefulWidget {
   final String tankId;
@@ -80,13 +81,19 @@ class _LogFeedScreenState extends State<LogFeedScreen> {
         _selectedTime.minute,
       );
 
-      await context.read<FeedProvider>().logFeed(
+      // Create new feed entry
+      final newEntry = FeedEntry(
+        id: DateTime.now().millisecondsSinceEpoch.toString(), // Generate unique ID
         tankId: widget.tankId,
-        quantity: double.parse(_quantityController.text),
         feedType: _selectedFeedType,
+        feedQuantity: double.parse(_quantityController.text),
         mixInstructions: _instructionsController.text,
-        dateTime: dateTime,
+        executedAt: dateTime,
+        trayStatus: null,
+        trayScore: null,
       );
+
+      await context.read<FeedProvider>().addFeedEntry(newEntry);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
